@@ -2,9 +2,12 @@ import { z } from "zod"
 
 const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required"),
-  DATABASE_URL: z.string().default("file:./dev.db"),
+  // Prisma CLI (generate, migrate) requires this and only accepts file: for SQLite. At runtime, if TURSO_* are set, the app uses Turso and ignores this.
+  DATABASE_URL: z.string().refine((url) => url.startsWith("file:"), {
+    message: "DATABASE_URL must start with file: (required by Prisma). When using Turso, set this to file:./dev.db and set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN for the app.",
+  }).default("file:./dev.db"),
   PORT: z.coerce.number().default(3000),
-  // Turso (optional – when set, Prisma uses libSQL adapter)
+  // Turso (optional – when set, app uses Turso at runtime; DATABASE_URL still needed for prisma generate/migrate)
   TURSO_DATABASE_URL: z.string().optional(),
   TURSO_AUTH_TOKEN: z.string().optional(),
   // Cloudinary (optional – when set, images are uploaded to Cloudinary)

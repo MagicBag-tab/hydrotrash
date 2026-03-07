@@ -4,6 +4,7 @@ import { analyzeImageForTrash } from "../services/claude.js"
 import { createTrashRecord, updateTrashRecordImageUrl } from "../services/trash-db.js"
 import { uploadTrashImage } from "../services/storage.js"
 import { useCloudinary } from "../lib/env.js"
+import { getDbErrorMessage } from "../lib/db-error.js"
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -57,10 +58,15 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
     res.json({ trash, id: record.id })
   } catch (e) {
     console.error("Analyze image error:", e)
-    res.status(500).json({
-      error: e instanceof Error ? e.message : "Failed to analyze image",
-      code: "ANALYZE_ERROR",
-    })
+    const dbErr = getDbErrorMessage(e)
+    if (dbErr) {
+      res.status(dbErr.code === "DB_NOT_READY" ? 503 : 500).json({ error: dbErr.message, code: dbErr.code })
+    } else {
+      res.status(500).json({
+        error: e instanceof Error ? e.message : "Failed to analyze image",
+        code: "ANALYZE_ERROR",
+      })
+    }
   }
 })
 

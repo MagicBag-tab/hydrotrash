@@ -1,6 +1,7 @@
 import { Router } from "express"
 import geohash from "ngeohash"
 import { listTrashRecords } from "../services/trash-db.js"
+import { getDbErrorMessage } from "../lib/db-error.js"
 import type { HeatmapBucket } from "../types/trash.js"
 
 const router = Router()
@@ -58,10 +59,12 @@ router.get("/heatmap", async (req, res) => {
     res.json({ precision, buckets: payload })
   } catch (e) {
     console.error("Heatmap error:", e)
-    res.status(500).json({
-      error: e instanceof Error ? e.message : "Failed to build heatmap",
-      code: "HEATMAP_ERROR",
-    })
+    const dbErr = getDbErrorMessage(e)
+    if (dbErr) {
+      res.status(dbErr.code === "DB_NOT_READY" ? 503 : 500).json({ error: dbErr.message, code: dbErr.code })
+    } else {
+      res.status(500).json({ error: e instanceof Error ? e.message : "Failed to build heatmap", code: "HEATMAP_ERROR" })
+    }
   }
 })
 
