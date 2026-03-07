@@ -43,6 +43,12 @@ API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite
 - **GET `/api/trash`**  
   - Returns all trash records (id, createdAt, lat/lng, all percentages, description, suggestedCleanup, imageUrl, source).
 
+- **GET `/api/trash/:id`**  
+  - Returns one trash record by id. Responds with 404 when not found.
+
+- **DELETE `/api/trash/:id`**  
+  - Deletes the trash record. Responds with 204 on success, 404 when not found.
+
 - **GET `/api/heatmap?precision=5`**  
   - Pre-aggregated data for heat maps. Returns `{ precision, buckets }` (geohash buckets with count and waste-type totals). `precision` 4–7, default 5.
 
@@ -59,6 +65,12 @@ When the backend returns a route as GeoJSON (e.g. a `FeatureCollection` with Lin
 - **Leaflet**: `L.geoJSON(geojson).addTo(map)` — [Leaflet GeoJSON](https://leafletjs.com/reference.html#geojson)
 - **Mapbox GL JS**: `map.addSource('route', { type: 'geojson', data: geojson })` and add a line layer — [Mapbox GeoJSON](https://docs.mapbox.com/mapbox-gl-js/example/data-driven-circle-colors/)
 - **deck.gl**: `GeoJsonLayer` — [deck.gl GeoJsonLayer](https://deck.gl/docs/api-reference/layers/geojson-layer)
+
+## Tests
+
+- **Run tests**: `npm test` (uses `test.db`, runs migrations then Vitest).
+- **Watch mode**: `npm run test:watch`.
+- Covers: health, GET/POST/DELETE trash, GET trash by id, heatmap, routes/optimized, analyze-image validation (400 when image or coordinates missing).
 
 ## Tech
 

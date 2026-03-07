@@ -65,6 +65,14 @@ backend-trashclient/
 
 - **Output**: List of trash records (id, createdAt, lat/lng, all percentages, description, suggestedCleanup, imageUrl, source).
 
+### GET `/api/trash/:id`
+
+- **Output**: Single trash record. 404 when not found.
+
+### DELETE `/api/trash/:id`
+
+- **Output**: 204 on success. 404 when not found.
+
 ### GET `/api/heatmap?precision=5`
 
 - **Output**: Pre-aggregated data for heat maps: `{ precision, buckets: HeatmapBucket[] }`. Each bucket has `geohash`, `latitude`, `longitude`, `count`, and totals per waste type. `precision` 4–7 (default 5).

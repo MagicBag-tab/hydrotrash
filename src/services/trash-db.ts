@@ -41,3 +41,15 @@ export async function listTrashRecords() {
     orderBy: { createdAt: "desc" },
   })
 }
+
+export async function getTrashRecordById(id: string) {
+  return prisma.trashRecord.findUnique({
+    where: { id },
+  })
+}
+
+export async function deleteTrashRecord(id: string) {
+  return prisma.trashRecord.delete({
+    where: { id },
+  })
+}
