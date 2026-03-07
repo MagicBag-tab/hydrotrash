@@ -14,7 +14,7 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "@anthropic-ai/sdk": "^0.32.1",
-    "@google-cloud/storage": "^7.14.0",
+    "cloudinary": "^2.5.1",
     "@libsql/client": "^0.8.1",
     "@prisma/adapter-libsql": "^5.22.0",
     "@prisma/client": "^5.22.0",

@@ -1,32 +1,35 @@
-import { Storage } from "@google-cloud/storage"
+import { v2 as cloudinary } from "cloudinary"
 import { env } from "../lib/env.js"
 
-let storage: Storage | null = null
+let configured = false
 
-function getStorage(): Storage {
-  if (!storage) {
-    if (!env.GCS_BUCKET) throw new Error("GCS_BUCKET is not set")
-    storage = new Storage(env.GCLOUD_PROJECT_ID ? { projectId: env.GCLOUD_PROJECT_ID } : undefined)
+function ensureConfigured(): void {
+  if (configured) return
+  if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+    cloudinary.config({
+      cloud_name: env.CLOUDINARY_CLOUD_NAME,
+      api_key: env.CLOUDINARY_API_KEY,
+      api_secret: env.CLOUDINARY_API_SECRET,
+    })
+    configured = true
   }
-  return storage
 }
 
 /**
- * Upload image buffer to GCS and return the public URL.
- * File name: trash/{cuid}.{ext}
+ * Upload image buffer to Cloudinary and return the public URL.
+ * Folder: trash/; public_id: trash/{id}
  */
 export async function uploadTrashImage(
   buffer: Buffer,
   mimeType: string,
   id: string
 ): Promise<string> {
-  const bucket = getStorage().bucket(env.GCS_BUCKET!)
-  const ext = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1] || "bin"
-  const name = `trash/${id}.${ext}`
-  const file = bucket.file(name)
-  await file.save(buffer, {
-    metadata: { contentType: mimeType },
-    public: true,
+  ensureConfigured()
+  const dataUri = `data:${mimeType};base64,${buffer.toString("base64")}`
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: "trash",
+    public_id: id,
+    overwrite: true,
   })
-  return `https://storage.googleapis.com/${env.GCS_BUCKET}/${name}`
+  return result.secure_url
 }

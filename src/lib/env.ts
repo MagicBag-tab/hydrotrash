@@ -7,9 +7,10 @@ const envSchema = z.object({
   // Turso (optional – when set, Prisma uses libSQL adapter)
   TURSO_DATABASE_URL: z.string().optional(),
   TURSO_AUTH_TOKEN: z.string().optional(),
-  // Google Cloud Storage (optional – when set, images are uploaded to GCS)
-  GCS_BUCKET: z.string().optional(),
-  GCLOUD_PROJECT_ID: z.string().optional(),
+  // Cloudinary (optional – when set, images are uploaded to Cloudinary)
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
@@ -31,6 +32,9 @@ export function useTurso(): boolean {
   return Boolean(url && token)
 }
 
-export function useGcs(): boolean {
-  return Boolean(process.env.GCS_BUCKET)
+export function useCloudinary(): boolean {
+  const name = process.env.CLOUDINARY_CLOUD_NAME
+  const key = process.env.CLOUDINARY_API_KEY
+  const secret = process.env.CLOUDINARY_API_SECRET
+  return Boolean(name && key && secret)
 }

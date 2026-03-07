@@ -3,7 +3,7 @@ import multer from "multer"
 import { analyzeImageForTrash } from "../services/claude.js"
 import { createTrashRecord, updateTrashRecordImageUrl } from "../services/trash-db.js"
 import { uploadTrashImage } from "../services/storage.js"
-import { useGcs } from "../lib/env.js"
+import { useCloudinary } from "../lib/env.js"
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -45,12 +45,12 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
 
     const record = await createTrashRecord(trash, lat, lng, "claude", null)
 
-    if (useGcs()) {
+    if (useCloudinary()) {
       try {
         const imageUrl = await uploadTrashImage(file.buffer, file.mimetype, record.id)
         await updateTrashRecordImageUrl(record.id, imageUrl)
       } catch (e) {
-        console.error("GCS upload failed:", e)
+        console.error("Cloudinary upload failed:", e)
       }
     }
 

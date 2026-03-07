@@ -1,6 +1,6 @@
 # backend-trashclient
 
-API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite), optional Google Cloud Storage, pre-aggregated heat maps, and GeoJSON routes. See **AGENTS.md** for full conventions.
+API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite), optional Cloudinary for images, pre-aggregated heat maps, and GeoJSON routes. See **AGENTS.md** for full conventions.
 
 ## Setup
 
@@ -13,7 +13,7 @@ API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite
    - Copy `.env.example` to `.env`
    - **Required**: `ANTHROPIC_API_KEY=sk-ant-...` from [console.anthropic.com](https://console.anthropic.com/)
    - **Optional – Turso**: `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` from [turso.tech](https://turso.tech). If set, the app uses Turso instead of local SQLite.
-   - **Optional – GCS**: `GCS_BUCKET` (and `GCLOUD_PROJECT_ID`) to upload analyzed images to Google Cloud Storage. Use Application Default Credentials or a service account key.
+   - **Optional – Cloudinary**: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` from [cloudinary.com/console](https://cloudinary.com/console) to upload analyzed images.
    - **Optional**: `PORT` (default 3000), `DATABASE_URL` (default `file:./dev.db` for local SQLite).
 
 3. **Database**
@@ -38,7 +38,7 @@ API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite
   - Body: `multipart/form-data` with `image` (file) and **required** `latitude`, `longitude` (numbers).  
   - Response: `{ trash: TrashAnalysis, id: string }`.  
   - TrashAnalysis includes: glass, plastic, paper, organic, metal, other, **eWaste**, **hazardous**, **specialTreatment** percentages, plus `description` and `suggestedCleanup`.  
-  - A record is always saved (coordinates required). If GCS is configured, the image is uploaded and `imageUrl` is stored.
+  - A record is always saved (coordinates required). If Cloudinary is configured, the image is uploaded and `imageUrl` is stored.
 
 - **GET `/api/trash`**  
   - Returns all trash records (id, createdAt, lat/lng, all percentages, description, suggestedCleanup, imageUrl, source).
@@ -64,6 +64,6 @@ When the backend returns a route as GeoJSON (e.g. a `FeatureCollection` with Lin
 
 - Node.js, TypeScript, Express
 - Prisma with **Turso** (libSQL adapter) or SQLite
-- **Google Cloud Storage** (optional) for images
+- **Cloudinary** (optional) for images
 - Anthropic SDK (Claude 3.5 Sonnet)
 - ngeohash for heat map aggregation

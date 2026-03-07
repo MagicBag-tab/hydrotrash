@@ -8,7 +8,7 @@ Guidelines for AI agents and developers working on this repo.
 
 - **Visual detection**: Claude 3.5 Sonnet analyzes images and classifies waste (including e-waste, hazardous, special treatment).
 - **Geographic storage**: Records require latitude/longitude; stored in Turso (or local SQLite for dev).
-- **Object storage**: Optional Google Cloud Storage for analyzed images.
+- **Object storage**: Optional Cloudinary for analyzed images.
 - **Heat maps**: Pre-aggregated data by geohash via `GET /api/heatmap`.
 - **Route optimization** (planned): GeoJSON output for collection routes; frontend can display with Leaflet/Mapbox.
 - **Time prediction**: Deferred; emphasize MVP first.
@@ -18,7 +18,7 @@ Guidelines for AI agents and developers working on this repo.
 ```
 [Frontend] ←→ [This API] ←→ [Claude 3.5 Sonnet] (image → trash analysis)
                 ↓                  ↓
-           [Turso / SQLite]   [GCS optional]
+           [Turso / SQLite]   [Cloudinary optional]
                 ↓
            GET /api/heatmap (pre-aggregated)
            GET /api/routes/optimized (GeoJSON, stub)
@@ -30,9 +30,9 @@ Guidelines for AI agents and developers working on this repo.
 - **Language**: TypeScript
 - **API**: Express
 - **DB**: Turso (libSQL) via Prisma driver adapter; fallback SQLite for local dev
-- **Object storage**: Google Cloud Storage (optional)
+- **Object storage**: Cloudinary (optional)
 - **AI**: Anthropic API (Claude 3.5 Sonnet)
-- **Env**: `.env` — `ANTHROPIC_API_KEY` required; `TURSO_*` and `GCS_*` optional
+- **Env**: `.env` — `ANTHROPIC_API_KEY` required; `TURSO_*` and `CLOUDINARY_*` optional
 
 ## Repo structure
 
@@ -45,7 +45,7 @@ backend-trashclient/
 ├── src/
 │   ├── index.ts
 │   ├── routes/         # analyze, trash, heatmap, routes/optimized
-│   ├── services/      # claude, trash-db, storage (GCS)
+│   ├── services/      # claude, trash-db, storage (Cloudinary)
 │   ├── lib/           # env, prisma (Turso adapter when configured)
 │   └── types/         # TrashAnalysis, HeatmapBucket, etc.
 └── prisma/
@@ -59,7 +59,7 @@ backend-trashclient/
 - **Input**: `multipart/form-data` with `image` (file) and **required** `latitude`, `longitude` (numbers).
 - **Output**: `{ trash: TrashAnalysis, id: string }`.
 - **TrashAnalysis** includes: `glassPercentage`, `plasticPercentage`, `paperPercentage`, `organicPercentage`, `metalPercentage`, `otherPercentage`, `eWastePercentage`, `hazardousPercentage`, `specialTreatmentPercentage`, plus optional `description`, `suggestedCleanup`.
-- **Side effect**: Always persists a record (coordinates required). If GCS is configured, uploads image and sets `imageUrl`.
+- **Side effect**: Always persists a record (coordinates required). If Cloudinary is configured, uploads image and sets `imageUrl`.
 
 ### GET `/api/trash`
 
@@ -93,7 +93,7 @@ backend-trashclient/
 ## Quick start
 
 1. `npm install`
-2. Copy `.env.example` to `.env`; set `ANTHROPIC_API_KEY`. For Turso set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`; for GCS set `GCS_BUCKET` (and optionally `GCLOUD_PROJECT_ID`).
+2. Copy `.env.example` to `.env`; set `ANTHROPIC_API_KEY`. For Turso set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`; for Cloudinary set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
 3. **Local SQLite**: `npx prisma generate && npx prisma migrate dev`
 4. **Turso**: `npx prisma generate`; apply schema with `prisma migrate diff` + `turso db shell` (see README).
 5. `npm run dev` → `http://localhost:3000`
