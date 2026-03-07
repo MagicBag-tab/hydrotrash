@@ -1,0 +1,32 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model TrashRecord {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  latitude  Float
+  longitude Float
+
+  glassPercentage          Float @default(0)
+  plasticPercentage        Float @default(0)
+  paperPercentage          Float @default(0)
+  organicPercentage        Float @default(0)
+  metalPercentage          Float @default(0)
+  otherPercentage          Float @default(0)
+  eWastePercentage         Float @default(0)
+  hazardousPercentage      Float @default(0)
+  specialTreatmentPercentage Float @default(0)
+
+  description       String?
+  suggestedCleanup  String?
+  imageUrl          String?
+  source            String?
+}
