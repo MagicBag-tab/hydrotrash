@@ -1,10 +1,20 @@
 import express from "express"
+import cors from "cors"
 import analyzeRoutes from "./routes/analyze.js"
 import trashRoutes from "./routes/trash.js"
 import heatmapRoutes from "./routes/heatmap.js"
 import routesOptimized from "./routes/routes-optimized.js"
+import { env } from "./lib/env.js"
 
 const app = express()
+// HydroTrash frontend (Vite) corre en otro origen/puerto -> habilitar CORS
+app.use(
+  cors({
+    origin: env.FRONTEND_URL ? env.FRONTEND_URL.split(",").map((s) => s.trim()) : true,
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+)
 app.use(express.json())
 
 app.use("/api", analyzeRoutes)

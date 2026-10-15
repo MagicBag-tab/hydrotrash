@@ -7,6 +7,8 @@ const envSchema = z.object({
     message: "DATABASE_URL must start with file: (required by Prisma). When using Turso, set this to file:./dev.db and set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN for the app.",
   }).default("file:./dev.db"),
   PORT: z.coerce.number().default(3000),
+  // Frontend URL(s) for CORS – comma separated, e.g. http://localhost:5173
+  FRONTEND_URL: z.string().optional(),
   // Turso (optional – when set, app uses Turso at runtime; DATABASE_URL still needed for prisma generate/migrate)
   TURSO_DATABASE_URL: z.string().optional(),
   TURSO_AUTH_TOKEN: z.string().optional(),
