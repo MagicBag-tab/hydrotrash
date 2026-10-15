@@ -43,6 +43,8 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
     const mediaType = file.mimetype as "image/jpeg" | "image/png" | "image/gif" | "image/webp"
 
     const trash = await analyzeImageForTrash(base64, mediaType)
+    // Sin API key el servicio devuelve demo heurístico -> marcar fuente
+    const isDemo = trash.description?.startsWith("Análisis DEMO") ?? false
 
     // HydroTrash Fase 1: contexto del punto (opcionales, no rompen clientes viejos)
     const meta = {
@@ -51,7 +53,7 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
       flowObserved: typeof req.body.flowObserved === "string" ? req.body.flowObserved : null,
       notes: typeof req.body.notes === "string" ? req.body.notes : null,
     }
-    const record = await createTrashRecord(trash, lat, lng, "claude", null, meta)
+    const record = await createTrashRecord(trash, lat, lng, isDemo ? "demo" : "claude", null, meta)
 
     if (useCloudinary()) {
       try {
@@ -62,7 +64,7 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
       }
     }
 
-    res.json({ trash, id: record.id })
+    res.json({ trash, id: record.id, demo: isDemo || undefined })
   } catch (e) {
     console.error("Analyze image error:", e)
     const dbErr = getDbErrorMessage(e)

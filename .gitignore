@@ -1,8 +1,11 @@
 node_modules/
+frontend/node_modules/
 dist/
+frontend/dist/
 .env
 *.db
 *.db-journal
 test.db
 test.db-journal
 .DS_Store
+frontend/package-lock.json

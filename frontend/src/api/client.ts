@@ -63,11 +63,61 @@ export interface ReportInput {
 
 export const CONTRERAS_CENTER = { lat: 14.6, lng: -90.48 };
 
+export interface Outfall {
+  code: string;
+  id: string;
+  latitude: number;
+  longitude: number;
+  siteType: string | null;
+  flowObserved: string | null;
+  plasticPercentage: number;
+  hazardousPercentage: number;
+  createdAt: string;
+}
+
+export interface TraceCandidate {
+  fromId: string;
+  fromCode: string | null;
+  distanceKm: number;
+  similarity: number;
+  score: number;
+  reason: string;
+}
+
+export interface WeapScenario {
+  id: string;
+  name: string;
+  ptarRemovalPct?: number;
+  biobardas?: boolean;
+  biobardaEfficiencyPct?: number;
+  reforestacionPct?: number;
+  lluviaFactor?: number;
+}
+
+export interface WeapResult {
+  scenario: string;
+  supuestos: string[];
+  nodos: Array<{ outfallCode: string | null; id: string; cargaPlastico: number; cargaOrganica: number; caudalRelativo: number }>;
+  totales: { plastico: number; organico: number; caudal: number };
+  reduccionVsBase?: { plasticoPct: number; organicoPct: number };
+}
+
 export const api = {
   health: () => req<{ status: string }>('/health'),
   listTrash: () => req<TrashRecordResponse[]>('/api/trash'),
   getTrash: (id: string) => req<TrashRecordResponse>(`/api/trash/${id}`),
   deleteTrash: (id: string) => req<void>(`/api/trash/${id}`, { method: 'DELETE' }),
+  outfalls: () => req<Outfall[]>('/api/outfalls'),
+  trace: (toId: string, radius = 1.5) =>
+    req<{ to: { id: string; code: string | null; latitude: number; longitude: number }; candidates: TraceCandidate[]; metodo: string }>(
+      `/api/contamination/trace?toId=${toId}&radius=${radius}`
+    ),
+  weapScenarios: () => req<WeapScenario[]>('/api/weap/scenarios'),
+  weapResults: (scenarioId: string, params: Record<string, number> = {}) => {
+    const q = new URLSearchParams({ scenarioId, ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])) });
+    return req<WeapResult>(`/api/weap/results?${q.toString()}`);
+  },
+  seedContreras: () => req<{ seeded: number; message?: string; points?: Array<{ id: string; code: string }> }>('/api/demo/seed-contreras', { method: 'POST' }),
   analyze: (file: File, latitude: number, longitude: number, meta: ReportInput) => {
     const fd = new FormData();
     fd.append('image', file);

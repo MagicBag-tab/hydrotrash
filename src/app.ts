@@ -4,6 +4,9 @@ import analyzeRoutes from "./routes/analyze.js"
 import trashRoutes from "./routes/trash.js"
 import heatmapRoutes from "./routes/heatmap.js"
 import routesOptimized from "./routes/routes-optimized.js"
+import outfallsRoutes from "./routes/outfalls.js"
+import weapRoutes from "./routes/weap.js"
+import demoRoutes from "./routes/demo.js"
 import { env } from "./lib/env.js"
 
 const app = express()
@@ -20,6 +23,9 @@ app.use(express.json())
 app.use("/api", analyzeRoutes)
 app.use("/api", trashRoutes)
 app.use("/api", heatmapRoutes)
+app.use("/api", outfallsRoutes)
+app.use("/api", weapRoutes)
+app.use("/api", demoRoutes)
 app.use("/api/routes", routesOptimized)
 
 app.get("/health", (_req, res) => {

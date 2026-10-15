@@ -2,7 +2,52 @@ import Anthropic from "@anthropic-ai/sdk"
 import { env } from "../lib/env.js"
 import type { TrashAnalysis } from "../types/trash.js"
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
+function hasRealAnthropicKey(): boolean {
+  const k = env.ANTHROPIC_API_KEY
+  return Boolean(k && k !== "test" && k !== "demo" && k.startsWith("sk-ant-"))
+}
+
+// Demo heurístico (sin API key): composición plausible de desfogue urbano.
+// Permite probar Fase 1/3/4/5 sin gastar cuota. Se marca con source "demo".
+export function demoAnalysis(seed = ""): TrashAnalysis {
+  let h = 0
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) % 1000
+  // Pesos relativos; se normalizan a 100 abajo
+  const w = {
+    glass: 3 + (h % 5),
+    plastic: 38 + (h % 25), // dominante en escorrentía urbana
+    paper: 8 + (h % 8),
+    organic: 18 + (h % 12),
+    metal: 4 + (h % 5),
+    eWaste: 1 + (h % 5),
+    hazardous: 4 + (h % 8),
+    special: 2 + (h % 6),
+  }
+  const total = w.glass + w.plastic + w.paper + w.organic + w.metal + w.eWaste + w.hazardous + w.special
+  const raw = [w.glass, w.plastic, w.paper, w.organic, w.metal, w.eWaste, w.hazardous, w.special].map((v) => (v / total) * 100)
+  // Redondeo a 2 decimales y el residuo va a "other" para sumar exactamente 100
+  const parts = raw.map((v) => Math.floor(v * 100) / 100)
+  const usedParts = parts.reduce((a, v) => a + v, 0)
+  const [glass, plastic, paper, organic, metal, eWaste, hazardous, special] = parts
+  return {
+    glassPercentage: glass,
+    plasticPercentage: plastic,
+    paperPercentage: paper,
+    organicPercentage: organic,
+    metalPercentage: metal,
+    otherPercentage: Number((100 - usedParts).toFixed(2)),
+    eWastePercentage: eWaste,
+    hazardousPercentage: hazardous,
+    specialTreatmentPercentage: special,
+    description: "Análisis DEMO (sin API key): acumulación típica de desfogue urbano con predominio de plásticos arrastrados por escorrentía.",
+    suggestedCleanup: "Instalar biobarda aguas abajo, jornada de limpieza y verificar descargas clandestinas en este punto.",
+  }
+}
+
+function getClient(): Anthropic | null {
+  if (!hasRealAnthropicKey()) return null
+  return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
+}
 
 const MODEL = "claude-3-5-sonnet-20241022"
 
@@ -44,6 +89,11 @@ export async function analyzeImageForTrash(
   imageBase64: string,
   mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
 ): Promise<TrashAnalysis> {
+  const client = getClient()
+  // Sin API key real -> demo heurístico para hackatón (no llama a Anthropic)
+  if (!client) {
+    return demoAnalysis(imageBase64.slice(0, 64))
+  }
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 1024,

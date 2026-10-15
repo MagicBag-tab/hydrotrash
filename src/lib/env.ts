@@ -1,7 +1,9 @@
 import { z } from "zod"
 
 const envSchema = z.object({
-  ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required"),
+  // Opcional para hackatón: sin key real la API usa análisis DEMO heurístico (source "demo").
+  // Pon tu key real (sk-ant-...) para usar Claude 3.5 Sonnet.
+  ANTHROPIC_API_KEY: z.string().optional().default("demo"),
   // Prisma CLI (generate, migrate) requires this and only accepts file: for SQLite. At runtime, if TURSO_* are set, the app uses Turso and ignores this.
   DATABASE_URL: z.string().refine((url) => url.startsWith("file:"), {
     message: "DATABASE_URL must start with file: (required by Prisma). When using Turso, set this to file:./dev.db and set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN for the app.",
