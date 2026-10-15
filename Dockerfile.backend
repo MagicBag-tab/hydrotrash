@@ -1,0 +1,23 @@
+# HydroTrash backend — build TS + runtime prod con SQLite persistente
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+# Caché de npm persistente + reintentos: evita ETIMEDOUT hacia registry.npmjs.org desde WSL
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --prefer-offline --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
+COPY tsconfig.json ./
+COPY src ./src
+RUN npx prisma generate && npm run build && npm prune --omit=dev
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/package.json ./package.json
+# La DB vive en /data (volumen) para no perder reportes entre rebuilds
+RUN mkdir -p /data
+EXPOSE 3000
+CMD ["sh", "-c", "DATABASE_URL=file:/data/prod.db npx prisma migrate deploy && DATABASE_URL=file:/data/prod.db node dist/index.js"]

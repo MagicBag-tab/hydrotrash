@@ -1,0 +1,42 @@
+# HydroTrash Río Contreras — un comando para todo
+# Uso:
+#   docker compose up --build        # levanta backend :3000 + frontend :5173
+#   docker compose up -d --build     # en segundo plano
+#   docker compose down              # apaga (la DB persiste en el volumen)
+# La DB SQLite persiste en el volumen `hydrotrash-data` (/data/prod.db).
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      # El contenedor escucha en 3000; CORS acepta el front local y el dockerizado
+      FRONTEND_URL: "http://localhost:5173,http://localhost:8080"
+    volumes:
+      - hydrotrash-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # NOTA: este Dockerfile solo copia frontend/dist al nginx.
+      # Haz el build local antes: cd frontend && npm run build
+      # (VITE_API_URL=http://localhost:3000 queda fijo en dist/; ver .env)
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Puente WEAP (Windows): WEAP es app de escritorio, no corre en contenedor Linux.
+  # Flujo: tú modelas en WEAP desktop con tu licencia, exportas CSV,
+  # y lo comparas con el adapter en http://localhost:3000/api/weap/results?scenarioId=integral
+  # (ver weap-bridge/README.md). Este perfil solo documenta el flujo, no levanta nada.
+
+volumes:
+  hydrotrash-data:

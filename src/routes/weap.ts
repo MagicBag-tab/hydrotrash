@@ -33,4 +33,81 @@ router.post("/weap/scenarios", async (req, res) => {
   }
 })
 
+// Puente WEAP desktop: compara CSV exportado de WEAP real vs adapter.
+// GET /api/weap/compare?scenarioId=integral&csv=tramo,plastico,... (o &csvUrl=https://...)
+// Ver weap-bridge/README.md para el flujo completo.
+function parseWeapCsv(text: string): Array<{ code: string; plastico: number; organico: number; caudal: number }> {
+  const lines = text.trim().split(/\r?\n/)
+  if (lines.length < 2) throw new Error("CSV vacío o sin filas de datos")
+  const norm = (s: string) => s.trim().toLowerCase().replace(/["']/g, "")
+  const head = lines[0].split(/[;,]/).map(norm)
+  const iCode = head.findIndex((h) => ["tramo", "code", "outfall", "desfogue", "nodo"].includes(h))
+  const iPlas = head.findIndex((h) => ["plastico", "plástico", "plastic"].includes(h))
+  const iOrg = head.findIndex((h) => ["organico", "orgánico", "organic", "dbo"].includes(h))
+  const iCau = head.findIndex((h) => ["caudal", "flow", "q"].includes(h))
+  if (iCode < 0 || iPlas < 0) throw new Error("CSV debe tener columnas tramo y plastico (ver weap-bridge/README.md)")
+  const num = (s: string) => Number(String(s ?? "").trim().replace(",", "."))
+  return lines.slice(1).map((ln) => {
+    const c = ln.split(/[;,]/)
+    return {
+      code: String(c[iCode] ?? "").trim(),
+      plastico: num(c[iPlas]),
+      organico: iOrg >= 0 ? num(c[iOrg]) : 0,
+      caudal: iCau >= 0 ? num(c[iCau]) : 0,
+    }
+  }).filter((r) => r.code)
+}
+
+router.get("/weap/compare", async (req, res) => {
+  try {
+    const scenarioId = String(req.query.scenarioId || "base_2026")
+    let csvText = typeof req.query.csv === "string" ? req.query.csv : ""
+    const csvUrl = typeof req.query.csvUrl === "string" ? req.query.csvUrl : ""
+    if (!csvText && csvUrl) {
+      const r = await fetch(csvUrl)
+      if (!r.ok) throw new Error(`No se pudo descargar el CSV (HTTP ${r.status})`)
+      csvText = await r.text()
+    }
+    if (!csvText) {
+      res.status(400).json({ error: "Pasa ?csv=<texto CSV> o ?csvUrl=<url>. Ver weap-bridge/README.md.", code: "MISSING_CSV" })
+      return
+    }
+    const weapRows = parseWeapCsv(csvText)
+    const adapter = await runScenario(scenarioId)
+    const byCode = new Map(adapter.nodos.map((n) => [String(n.outfallCode || ""), n]))
+    const detalle = weapRows.map((w) => {
+      const a = byCode.get(w.code)
+      const diff = (wv: number, av: number) => (wv !== 0 ? Number((((av - wv) / Math.abs(wv)) * 100).toFixed(1)) : null)
+      return {
+        code: w.code,
+        weap: { plastico: w.plastico, organico: w.organico, caudal: w.caudal },
+        adapter: a ? { plastico: a.cargaPlastico, organica: a.cargaOrganica, caudal: a.caudalRelativo } : null,
+        diffPlasticoPct: a ? diff(w.plastico, a.cargaPlastico) : null,
+      }
+    })
+    const sum = (rows: typeof weapRows, k: "plastico" | "organico" | "caudal") =>
+      Number(rows.reduce((acc, r) => acc + (Number.isFinite(r[k]) ? r[k] : 0), 0).toFixed(2))
+    const weapTotales = { plastico: sum(weapRows, "plastico"), organico: sum(weapRows, "organico"), caudal: sum(weapRows, "caudal") }
+    const pct = (b: number, v: number) => (b !== 0 ? Number((((v - b) / Math.abs(b)) * 100).toFixed(1)) : null)
+    const diffPct = {
+      plasticoPct: pct(weapTotales.plastico, adapter.totales.plastico),
+      organicoPct: pct(weapTotales.organico, adapter.totales.organico),
+    }
+    const maxDiff = Math.max(Math.abs(diffPct.plasticoPct ?? 999), Math.abs(diffPct.organicoPct ?? 0))
+    res.json({
+      scenario: adapter.scenario,
+      weapTotales,
+      adapterTotales: adapter.totales,
+      diffPct,
+      veredicto: maxDiff < 25 ? "calibrado" : "revisar supuestos",
+      nota: maxDiff < 25
+        ? "Adapter dentro del ±25% de WEAP desktop: supuestos aceptables para el hackatón."
+        : "Brecha >25%: ajusta PTAR/biobardas/reforestación o recalibra WEAP con más reportes de campo.",
+      detalle,
+    })
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Failed", code: "WEAP_COMPARE_ERROR" })
+  }
+})
+
 export default router

@@ -9,3 +9,7 @@ test.db
 test.db-journal
 .DS_Store
 frontend/package-lock.json
+# Docker: no mandar lock del front (lo resolvemos en build) ni DBs locales
+frontend/package-lock.json
+data/
+
