@@ -1,0 +1,88 @@
+import { useEffect, useState } from 'react';
+import { api, type TrashRecordResponse } from '../api/client';
+
+function top3(r: TrashRecordResponse): string {
+  const entries: Array<[string, number]> = [
+    ['plástico', r.plasticPercentage],
+    ['orgánico', r.organicPercentage],
+    ['papel', r.paperPercentage],
+    ['vidrio', r.glassPercentage],
+    ['metal', r.metalPercentage],
+    ['peligroso', r.hazardousPercentage],
+    ['e-waste', r.eWastePercentage],
+    ['trat. especial', r.specialTreatmentPercentage],
+    ['otro', r.otherPercentage],
+  ];
+  return entries
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k, v]) => `${k} ${v.toFixed(0)}%`)
+    .join(' · ');
+}
+
+export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number; onSelect: (id: string) => void }) {
+  const [items, setItems] = useState<TrashRecordResponse[]>([]);
+  const [filter, setFilter] = useState<string>('todos');
+  const [error, setError] = useState<string>('');
+
+  async function load() {
+    try {
+      setError('');
+      setItems(await api.listTrash());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, [refreshKey]);
+
+  async function remove(id: string) {
+    if (!confirm('¿Borrar este reporte?')) return;
+    await api.deleteTrash(id);
+    load();
+  }
+
+  const filtered = items.filter((r) => {
+    if (filter === 'peligrosos') return r.hazardousPercentage > 10;
+    if (filter === 'plastico') return r.plasticPercentage > 40;
+    if (filter === 'desfogues') return (r.siteType || '').toLowerCase() === 'desfogue';
+    return true;
+  });
+
+  const avgPlastic = items.length ? items.reduce((a, r) => a + r.plasticPercentage, 0) / items.length : 0;
+  const hazardousCount = items.filter((r) => r.hazardousPercentage > 10).length;
+
+  return (
+    <div className="card">
+      <h2>Reportes Río Contreras ({filtered.length}/{items.length})</h2>
+      <p><small>Promedio plástico {avgPlastic.toFixed(1)}% · Peligrosos (&gt;10%): {hazardousCount}</small></p>
+      <div className="row">
+        {['todos', 'desfogues', 'plastico', 'peligrosos'].map((f) => (
+          <button key={f} type="button" className={filter === f ? '' : 'ghost'} onClick={() => setFilter(f)}>{f}</button>
+        ))}
+        <button type="button" className="ghost" onClick={load}>Recargar</button>
+      </div>
+      {error && <p className="bad">{error}</p>}
+      <div className="grid">
+        {filtered.map((r) => (
+          <div key={r.id} className="mini">
+            <strong>{r.outfallCode || r.siteType || 'Punto'} · {new Date(r.createdAt).toLocaleString()}</strong>
+            <div><small>{r.latitude.toFixed(5)}, {r.longitude.toFixed(5)} · flujo: {r.flowObserved || '—'}</small></div>
+            <div>{top3(r)}</div>
+            {r.hazardousPercentage > 10 && <span className="badge danger">peligroso</span>}
+            {r.eWastePercentage > 5 && <span className="badge warn">e-waste</span>}
+            {r.specialTreatmentPercentage > 10 && <span className="badge info">trat. especial</span>}
+            {r.description && <div><small>{r.description}</small></div>}
+            <div className="row">
+              <button type="button" onClick={() => onSelect(r.id)}>Ver</button>
+              <button type="button" className="ghost" onClick={() => remove(r.id)}>Borrar</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {!filtered.length && <p><small>Sin reportes. Sube la primera foto de un desfogue.</small></p>}
+    </div>
+  );
+}

@@ -23,6 +23,10 @@ function toRecordPayload(r: Awaited<ReturnType<typeof listTrashRecords>>[number]
     suggestedCleanup: r.suggestedCleanup,
     imageUrl: r.imageUrl,
     source: r.source,
+    siteType: r.siteType,
+    outfallCode: r.outfallCode,
+    flowObserved: r.flowObserved,
+    notes: r.notes,
   }
 }
 

@@ -1,12 +1,20 @@
 import { prisma } from "../lib/prisma.js"
 import type { TrashAnalysis } from "../types/trash.js"
 
+export interface TrashSiteMeta {
+  siteType?: string | null
+  outfallCode?: string | null
+  flowObserved?: string | null
+  notes?: string | null
+}
+
 export async function createTrashRecord(
   analysis: TrashAnalysis,
   latitude: number,
   longitude: number,
   source: string = "claude",
-  imageUrl?: string | null
+  imageUrl?: string | null,
+  meta?: TrashSiteMeta
 ) {
   return prisma.trashRecord.create({
     data: {
@@ -25,6 +33,10 @@ export async function createTrashRecord(
       suggestedCleanup: analysis.suggestedCleanup ?? null,
       imageUrl: imageUrl ?? null,
       source,
+      siteType: meta?.siteType?.trim() || null,
+      outfallCode: meta?.outfallCode?.trim() || null,
+      flowObserved: meta?.flowObserved?.trim() || null,
+      notes: meta?.notes?.trim() || null,
     },
   })
 }

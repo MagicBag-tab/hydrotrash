@@ -32,6 +32,10 @@ export interface TrashRecordResponse extends TrashAnalysis {
   longitude: number;
   imageUrl?: string | null;
   source?: string | null;
+  siteType?: string | null;
+  outfallCode?: string | null;
+  flowObserved?: string | null;
+  notes?: string | null;
 }
 
 export interface HeatmapBucket {
@@ -50,15 +54,31 @@ export interface HeatmapBucket {
   totalSpecialTreatment: number;
 }
 
+export interface ReportInput {
+  siteType: string;
+  outfallCode: string;
+  flowObserved: string;
+  notes: string;
+}
+
+export const CONTRERAS_CENTER = { lat: 14.6, lng: -90.48 };
+
 export const api = {
   health: () => req<{ status: string }>('/health'),
   listTrash: () => req<TrashRecordResponse[]>('/api/trash'),
-  analyze: (file: File, latitude: number, longitude: number) => {
+  getTrash: (id: string) => req<TrashRecordResponse>(`/api/trash/${id}`),
+  deleteTrash: (id: string) => req<void>(`/api/trash/${id}`, { method: 'DELETE' }),
+  analyze: (file: File, latitude: number, longitude: number, meta: ReportInput) => {
     const fd = new FormData();
     fd.append('image', file);
     fd.append('latitude', String(latitude));
     fd.append('longitude', String(longitude));
+    if (meta.siteType) fd.append('siteType', meta.siteType);
+    if (meta.outfallCode) fd.append('outfallCode', meta.outfallCode);
+    if (meta.flowObserved) fd.append('flowObserved', meta.flowObserved);
+    if (meta.notes) fd.append('notes', meta.notes);
     return req<{ trash: TrashAnalysis; id: string }>('/api/analyze-image', { method: 'POST', body: fd });
   },
   heatmap: (precision = 5) => req<{ precision: number; buckets: HeatmapBucket[] }>(`/api/heatmap?precision=${precision}`),
 };
+

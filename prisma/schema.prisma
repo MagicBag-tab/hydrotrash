@@ -29,4 +29,10 @@ model TrashRecord {
   suggestedCleanup  String?
   imageUrl          String?
   source            String?
+
+  // HydroTrash Fase 1 – contexto de desfogue / alcantarilla (opcionales para no romper API)
+  siteType     String? // desfogue | alcantarilla | tramo_rio
+  outfallCode  String? // D-01, A-12…
+  flowObserved String? // seco | leve | fuerte
+  notes        String?
 }

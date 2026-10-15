@@ -44,7 +44,14 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
 
     const trash = await analyzeImageForTrash(base64, mediaType)
 
-    const record = await createTrashRecord(trash, lat, lng, "claude", null)
+    // HydroTrash Fase 1: contexto del punto (opcionales, no rompen clientes viejos)
+    const meta = {
+      siteType: typeof req.body.siteType === "string" ? req.body.siteType : null,
+      outfallCode: typeof req.body.outfallCode === "string" ? req.body.outfallCode : null,
+      flowObserved: typeof req.body.flowObserved === "string" ? req.body.flowObserved : null,
+      notes: typeof req.body.notes === "string" ? req.body.notes : null,
+    }
+    const record = await createTrashRecord(trash, lat, lng, "claude", null, meta)
 
     if (useCloudinary()) {
       try {
