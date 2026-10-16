@@ -1,18 +1,21 @@
-# HydroTrash backend — modo híbrido: el código ya viene compilado de LOCAL.
-# Por qué: `npm ci` dentro de Docker/WSL da ETIMEDOUT contra registry.npmjs.org.
-# Flujo:  npm install && npm run build   (en tu máquina, 1 vez)
-#         docker compose up --build -d   (Docker solo empaqueta, sin red)
-# OJO: node_modules de Windows NO sirven en Linux (binarios nativos libsql/prisma).
-# Por eso la base es node:20-slim (glibc, igual que WSL) y NO alpine.
-# Regenera node_modules en WSL antes del build: wsl npm install && wsl npm run build
+# HydroTrash backend — build autocontenido (no copia node_modules de Windows).
+# Por qué: node_modules de Windows NO sirve en Linux (binarios nativos libsql/prisma
+# compilados para win32 no cargan en glibc/musl), y el contexto de 64kB confirma
+# que ni siquiera llega al daemon. Este Dockerfile instala en Linux con reintentos.
+# Si la red bloquea npm (ETIMEDOUT/x509), usa el MODO HÍBRIDO (ver docker-up.sh):
+# frontend en Docker + backend local con `npm start`.
 FROM node:20-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-# node_modules + dist + prisma generados en WSL (Linux glibc, compatible con slim)
-COPY node_modules ./node_modules
-COPY dist ./dist
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma
-COPY package.json ./package.json
+RUN npm config set fetch-retries 5 \
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000 \
+ && (npm ci --omit=dev || npm install --omit=dev) \
+ && npm cache clean --force
+# dist/ compilado en local (tsc es portable, sin binarios nativos)
+COPY dist ./dist
 RUN mkdir -p /data
 EXPOSE 3000
 CMD ["sh", "-c", "DATABASE_URL=file:/data/prod.db npx prisma migrate deploy && DATABASE_URL=file:/data/prod.db node dist/index.js"]
