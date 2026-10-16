@@ -12,8 +12,12 @@
 #        → http://localhost:3000
 #
 # MODO FULL-DOCKER (cuando la red lo permita):
-#   cd frontend && npm run build && cd ..
-#   docker compose up --build -d
+#   IMPORTANTE: node_modules de Windows NO sirven en Linux.
+#   Regenera en WSL primero (Linux glibc, compatible con node:20-slim):
+#     wsl -e bash -lc "cd /mnt/c/Users/sarah/Universidad/YO/hydrotrash && npm install && npm run build"
+#   Luego frontend en Windows y compose en WSL:
+#     cd frontend && npm run build && cd ..
+#     wsl docker compose up --build -d
 #   → backend :3000 + frontend :8080 (ver docker-compose.yml)
 #
 # URLs:

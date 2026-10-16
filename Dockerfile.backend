@@ -2,10 +2,13 @@
 # Por qué: `npm ci` dentro de Docker/WSL da ETIMEDOUT contra registry.npmjs.org.
 # Flujo:  npm install && npm run build   (en tu máquina, 1 vez)
 #         docker compose up --build -d   (Docker solo empaqueta, sin red)
-FROM node:20-alpine AS runtime
+# OJO: node_modules de Windows NO sirven en Linux (binarios nativos libsql/prisma).
+# Por eso la base es node:20-slim (glibc, igual que WSL) y NO alpine.
+# Regenera node_modules en WSL antes del build: wsl npm install && wsl npm run build
+FROM node:20-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-# node_modules de prod generados en local (npm prune --omit=dev) + dist + prisma
+# node_modules + dist + prisma generados en WSL (Linux glibc, compatible con slim)
 COPY node_modules ./node_modules
 COPY dist ./dist
 COPY prisma ./prisma
