@@ -1,37 +1,31 @@
-# HydroTrash · Docker rápido
+# HydroTrash · Arranque
 #
-# POR QUÉ este flujo: `npm ci` dentro de Docker falla con ETIMEDOUT hacia
-# registry.npmjs.org desde WSL, y mandar 71MB (node_modules) de contexto
-# ralentiza todo. Así que:
-#   1. Build del frontend en LOCAL (usa tu red + tu caché de npm, ~2s).
-#   2. Docker solo construye el backend y sirve frontend/dist con nginx.
+# MODO ACTUAL (recomendado): frontend en Docker + backend local.
+# Por qué: la red intercepta el TLS hacia Docker Hub (x509) y `npm ci`
+# dentro de Docker da ETIMEDOUT. Así evitamos ambas cosas:
 #
-# REQUISITO: Docker Desktop abierto (la ballenita en la bandeja).
-# Si `docker compose` da "cannot find the file specified", abre Docker Desktop
-# y espera a que diga "Engine running", luego reintenta.
+#   1. Frontend dockerizado (imagen ya compilada, sin red):
+#        docker start hydrotrash-front  (o: docker run -d --name hydrotrash-front -p 8080:80 hydrotrash-frontend:latest)
+#        → http://localhost:8080
+#   2. Backend local (usa tu red + tu caché de npm):
+#        npm install && npm run build && npm start
+#        → http://localhost:3000
 #
-# PASO 1 — build local del frontend (PowerShell o WSL):
-#   cd frontend; npm run build; cd ..
-#
-# PASO 2 — levantar todo:
+# MODO FULL-DOCKER (cuando la red lo permita):
+#   cd frontend && npm run build && cd ..
 #   docker compose up --build -d
-#   curl http://localhost:3000/health
-#   curl http://localhost:8080/          # frontend dockerizado
+#   → backend :3000 + frontend :8080 (ver docker-compose.yml)
 #
-# URLs con Docker:
+# URLs:
 #   Backend  → http://localhost:3000
-#   Frontend → http://localhost:8080  (sirve dist/ compilado)
-#   Dev Vite → http://localhost:5173  (npm run dev, sin Docker)
+#   Frontend → http://localhost:8080  (Docker) o http://localhost:5173 (npm run dev)
 #
-# Si el backend vuelve a dar ETIMEDOUT de npm en su build, reintenta:
-# suele ser intermitente. Opcional: precargar la imagen base:
-#   docker pull node:20-alpine && docker pull nginx:alpine
+# Demo Contreras (6 desfogues) + puente WEAP con licencia:
+#   curl -X POST http://localhost:3000/api/demo/seed-contreras
+#   curl "http://localhost:3000/api/weap/compare?scenarioId=integral&csv=tramo%2Cplastico%2Corganico%2Ccaudal%0AD-01%2C55%2C20%2C1.3"
+#   (ver weap-bridge/README.md para exportar el CSV desde WEAP desktop)
 
-docker compose up --build -d
-docker compose ps
+docker start hydrotrash-front 2>/dev/null || docker run -d --name hydrotrash-front -p 8080:80 hydrotrash-frontend:latest
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 curl -s http://localhost:3000/health; echo
 curl -s -o /dev/null -w "FRONT:%{http_code}\n" http://localhost:8080/
-
-# Sembrar demo Contreras (6 desfogues) y probar puente WEAP:
-curl -s -X POST http://localhost:3000/api/demo/seed-contreras; echo
-curl -s "http://localhost:3000/api/weap/compare?scenarioId=base_2026&csv=tramo%2Cplastico%2Corganico%2Ccaudal%0AD-01%2C40%2C20%2C1.3%0AD-03%2C55%2C22%2C1.3"; echo

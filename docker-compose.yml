@@ -9,6 +9,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      # MODO HÍBRIDO: compila en local antes (npm install && npm run build).
+      # Docker solo empaqueta node_modules/dist: no usa red salvo la imagen base.
     ports:
       - "3000:3000"
     env_file:

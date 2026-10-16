@@ -1,23 +1,15 @@
-# HydroTrash backend — build TS + runtime prod con SQLite persistente
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma
-# Caché de npm persistente + reintentos: evita ETIMEDOUT hacia registry.npmjs.org desde WSL
-RUN --mount=type=cache,target=/root/.npm \
-  npm ci --prefer-offline --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
-COPY tsconfig.json ./
-COPY src ./src
-RUN npx prisma generate && npm run build && npm prune --omit=dev
-
+# HydroTrash backend — modo híbrido: el código ya viene compilado de LOCAL.
+# Por qué: `npm ci` dentro de Docker/WSL da ETIMEDOUT contra registry.npmjs.org.
+# Flujo:  npm install && npm run build   (en tu máquina, 1 vez)
+#         docker compose up --build -d   (Docker solo empaqueta, sin red)
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/package.json ./package.json
-# La DB vive en /data (volumen) para no perder reportes entre rebuilds
+# node_modules de prod generados en local (npm prune --omit=dev) + dist + prisma
+COPY node_modules ./node_modules
+COPY dist ./dist
+COPY prisma ./prisma
+COPY package.json ./package.json
 RUN mkdir -p /data
 EXPOSE 3000
 CMD ["sh", "-c", "DATABASE_URL=file:/data/prod.db npx prisma migrate deploy && DATABASE_URL=file:/data/prod.db node dist/index.js"]

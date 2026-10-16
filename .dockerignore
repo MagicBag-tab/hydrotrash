@@ -4,6 +4,12 @@ dist
 .gitignore
 .env
 *.db
+*.db-journal
 Dockerfile*
 docker-compose*
+docker-up.sh
 README.md
+weap-bridge
+tests
+frontend
+coverage
