@@ -44,6 +44,14 @@ export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number
     load();
   }
 
+  function downloadCsv() {
+    const headers = ['id', 'createdAt', 'latitude', 'longitude', 'siteType', 'outfallCode', 'flowObserved', 'plasticPercentage', 'organicPercentage', 'paperPercentage', 'glassPercentage', 'metalPercentage', 'otherPercentage', 'eWastePercentage', 'hazardousPercentage', 'specialTreatmentPercentage', 'description', 'suggestedCleanup', 'imageUrl', 'source'];
+    const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [headers, ...items.map((r) => headers.map((h) => cell((r as unknown as Record<string, unknown>)[h])))].map((row) => row.join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = 'hydrotrash-reportes.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+
   const filtered = items.filter((r) => {
     if (filter === 'peligrosos') return r.hazardousPercentage > 10;
     if (filter === 'plastico') return r.plasticPercentage > 40;
@@ -63,6 +71,7 @@ export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number
           <button key={f} type="button" className={filter === f ? '' : 'ghost'} onClick={() => setFilter(f)}>{f}</button>
         ))}
         <button type="button" className="ghost" onClick={load}>Recargar</button>
+        <button type="button" className="ghost" onClick={downloadCsv} disabled={!items.length}>Descargar datos CSV</button>
       </div>
       {error && <p className="bad">{error}</p>}
       <div className="grid">

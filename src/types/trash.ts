@@ -14,6 +14,9 @@ export interface TrashAnalysis {
   specialTreatmentPercentage: number
   description?: string
   suggestedCleanup?: string
+  isEvaluable?: boolean
+  visibleAccumulation?: boolean | null
+  visibleObstruction?: boolean | null
 }
 
 export interface TrashRecordResponse extends TrashAnalysis {

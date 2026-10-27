@@ -64,7 +64,7 @@ router.post("/analyze-image", upload.single("image"), async (req, res) => {
       }
     }
 
-    res.json({ trash, id: record.id, demo: isDemo || undefined })
+    res.json({ trash, id: record.id, demo: isDemo || undefined, reviewRequired: true })
   } catch (e) {
     console.error("Analyze image error:", e)
     const dbErr = getDbErrorMessage(e)

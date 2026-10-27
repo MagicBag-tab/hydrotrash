@@ -1,0 +1,16 @@
+{
+  "area": "Capacitacion_RioContreras",
+  "scenario": "Reference",
+  "waterYearStartMonth": 1,
+  "backendUrl": "http://localhost:3000",
+  "mappings": [
+    {
+      "hydrotrashCode": "D-01",
+      "branchPath": "\\Supply and Resources\\River\\Rio_Contreras",
+      "variable": "Streamflow",
+      "unit": "Thousand Cubic Meter",
+      "periodStartYear": 2025,
+      "timestep": 1
+    }
+  ]
+}

@@ -35,4 +35,73 @@ model TrashRecord {
   outfallCode  String? // D-01, A-12…
   flowObserved String? // seco | leve | fuerte
   notes        String?
+  observationId String? @unique
+  observation   Observation? @relation(fields: [observationId], references: [id])
+}
+
+model ObservationPoint {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String
+  latitude     Float
+  longitude    Float
+  weapElementCode String?
+  createdAt    DateTime @default(now())
+  observations Observation[]
+}
+
+model Observation {
+  id             String   @id @default(cuid())
+  pointId        String?
+  point          ObservationPoint? @relation(fields: [pointId], references: [id])
+  capturedAt     DateTime @default(now())
+  photoUrl       String?
+  notes          String?
+  provenance     String
+  aiAnalysis     VisualAnalysis?
+  review         HumanReview?
+  trashRecord    TrashRecord?
+}
+
+model VisualAnalysis {
+  id                    String   @id @default(cuid())
+  observationId         String   @unique
+  observation           Observation @relation(fields: [observationId], references: [id])
+  rawJson               String
+  isEvaluable           Boolean
+  visibleAccumulation   Boolean?
+  visibleObstruction    Boolean?
+  evaluatedAt           DateTime @default(now())
+}
+
+model HumanReview {
+  id             String   @id @default(cuid())
+  observationId  String   @unique
+  observation    Observation @relation(fields: [observationId], references: [id])
+  status         String
+  correctionsJson String?
+  reviewedAt     DateTime @default(now())
+}
+
+model WeapRun {
+  id             String   @id @default(cuid())
+  scenario       String
+  modelVersion   String?
+  originalFileName String?
+  importedAt     DateTime @default(now())
+  results        WeapResult[]
+}
+
+model WeapResult {
+  id          String   @id @default(cuid())
+  runId       String
+  run         WeapRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  elementCode String
+  periodStart DateTime
+  periodEnd   DateTime
+  variable    String
+  value       Float
+  unit        String
+  @@unique([runId, elementCode, periodStart, periodEnd, variable, unit])
+  @@index([elementCode, variable, unit, periodStart, periodEnd])
 }

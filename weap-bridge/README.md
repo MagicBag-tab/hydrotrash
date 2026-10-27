@@ -56,3 +56,51 @@ El adapter (`src/services/weap.ts`) usa **entradas reales** de `/api/trash`
 (fotos + Claude). WEAP desktop aporta la hidrología calibrada. El endpoint
 `/api/weap/compare` mide la brecha entre ambos — eso es calibración honesta,
 no números inventados.
+# Puente COM local (Windows, solo lectura)
+
+Se añadió `weap_com_bridge.py`. Usa `pywin32` y `WEAP.WEAPApplication`.
+No escribe expresiones, no cambia escenarios, no ejecuta cálculos y no guarda
+el área. La implementación usa la API oficial `ProgramStarted`, `ActiveArea`,
+`Areas`, `Scenarios`, `Branches`, `Branch.FullName`, `Branch.VariableExists` y
+`ResultValue(BranchName:VariableName[Scale Unit], Year, TimeStepNumber, Scenario)`.
+
+Instalación en Windows:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install -r weap-bridge\requirements.txt
+Copy-Item weap-bridge\config.example.json weap-bridge\config.json
+```
+
+Configura explícitamente `area`, `scenario`, `waterYearStartMonth` y el mapping
+de `branchPath`, `variable`, `unit`, `periodStartYear` y `timestep`. El área
+debe estar abierta y activa; el nombre del archivo `.WEAP` no se usa para
+inferirla.
+
+Diagnóstico sin modificar WEAP:
+
+```powershell
+py weap-bridge\weap_com_bridge.py --config weap-bridge\config.json diagnose
+```
+
+Extracción de una serie puntual al contrato HydroTrash:
+
+```powershell
+py weap-bridge\weap_com_bridge.py --config weap-bridge\config.json extract-one --output resultados.csv
+```
+
+La salida es `elementCode,periodStart,periodEnd,variable,value,unit`. El
+`timestep` conserva el calendario del año hidrológico configurado. Los valores
+faltantes permanecen vacíos, no se convierten en cero.
+
+Importación explícita al backend:
+
+```powershell
+py weap-bridge\weap_com_bridge.py --config weap-bridge\config.json import resultados.csv
+```
+
+La importación registra escenario, archivo y `modelVersion=COM-readonly`.
+La prueba COM real queda pendiente hasta ejecutar el diagnóstico en Windows con
+WEAP instalado, registrado y el área real abierta.
+

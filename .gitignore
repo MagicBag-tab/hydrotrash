@@ -12,4 +12,7 @@ frontend/package-lock.json
 # Docker: no mandar lock del front (lo resolvemos en build) ni DBs locales
 frontend/package-lock.json
 data/
+# WEAP local configuration and generated exports
+weap-bridge/config.json
+resultados.csv
 

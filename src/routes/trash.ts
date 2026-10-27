@@ -1,6 +1,7 @@
 import { Router } from "express"
 import { listTrashRecords, getTrashRecordById, deleteTrashRecord } from "../services/trash-db.js"
 import { getDbErrorMessage } from "../lib/db-error.js"
+import { prisma } from "../lib/prisma.js"
 
 const router = Router()
 
@@ -52,7 +53,8 @@ router.get("/trash/:id", async (req, res) => {
       res.status(404).json({ error: "Trash record not found", code: "NOT_FOUND" })
       return
     }
-    res.json(toRecordPayload(record))
+    const observation = record.observationId ? await prisma.observation.findUnique({ where: { id: record.observationId }, include: { review: true, point: true } }) : null
+    res.json({ ...toRecordPayload(record), observation })
   } catch (e) {
     console.error("Get trash error:", e)
     const dbErr = getDbErrorMessage(e)
@@ -82,6 +84,23 @@ router.delete("/trash/:id", async (req, res) => {
       res.status(500).json({ error: e instanceof Error ? e.message : "Failed to delete trash record", code: "DELETE_ERROR" })
     }
   }
+})
+
+// Revisión humana conservando el análisis original. La corrección es un JSON parcial de categorías visibles.
+router.post("/trash/:id/review", async (req, res) => {
+  try {
+    const record = await getTrashRecordById(req.params.id)
+    if (!record) return res.status(404).json({ error: "Trash record not found", code: "NOT_FOUND" })
+    const status = String(req.body?.status || "approved")
+    if (!["approved", "corrected", "rejected"].includes(status)) return res.status(400).json({ error: "status inválido", code: "INVALID_REVIEW" })
+    let observation = record.observationId ? await prisma.observation.findUnique({ where: { id: record.observationId } }) : null
+    if (!observation) {
+      observation = await prisma.observation.create({ data: { capturedAt: record.createdAt, photoUrl: record.imageUrl, notes: record.notes, provenance: record.source || "unknown" } })
+      await prisma.trashRecord.update({ where: { id: record.id }, data: { observationId: observation.id } })
+    }
+    const review = await prisma.humanReview.upsert({ where: { observationId: observation.id }, create: { observationId: observation.id, status, correctionsJson: JSON.stringify(req.body?.corrections || null) }, update: { status, correctionsJson: JSON.stringify(req.body?.corrections || null), reviewedAt: new Date() } })
+    res.json({ id: review.id, observationId: observation.id, status: review.status, originalAiPreserved: true })
+  } catch (e) { res.status(400).json({ error: e instanceof Error ? e.message : "Review failed", code: "REVIEW_ERROR" }) }
 })
 
 export default router

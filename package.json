@@ -34,6 +34,7 @@
     "@types/node": "^22.9.0",
     "@types/supertest": "^6.0.2",
     "cross-env": "^7.0.3",
+    "playwright": "^1.64.1",
     "prisma": "^5.22.0",
     "supertest": "^7.0.0",
     "tsx": "^4.19.2",

@@ -1,7 +1,53 @@
 import { Router } from "express"
+import multer from "multer"
+import { z } from "zod"
+import { prisma } from "../lib/prisma.js"
 import { listScenarios, runScenario } from "../services/weap.js"
 
 const router = Router()
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } })
+
+const rowSchema = z.object({
+  elementCode: z.string().trim().min(1).max(100),
+  periodStart: z.coerce.date(), periodEnd: z.coerce.date(),
+  variable: z.string().trim().min(1).max(100),
+  value: z.coerce.number().finite(), unit: z.string().trim().min(1).max(50),
+})
+
+function parseImportCsv(text: string) {
+  const lines = text.replace(/^\uFEFF/, "").trim().split(/\r?\n/)
+  if (lines.length < 2 || lines.length > 5001) throw new Error("CSV vacío o con más de 5000 filas")
+  const delimiter = lines[0].includes(";") ? ";" : ","
+  const headers = lines[0].split(delimiter).map((x) => x.trim())
+  const required = ["elementCode", "periodStart", "periodEnd", "variable", "value", "unit"]
+  const indexes = Object.fromEntries(required.map((h) => [h, headers.indexOf(h)]))
+  if (Object.values(indexes).some((i) => i < 0)) throw new Error(`CSV requiere: ${required.join(", ")}`)
+  return lines.slice(1).map((line, n) => {
+    const cells = line.split(delimiter).map((x) => x.trim().replace(/^"|"$/g, ""))
+    const row = Object.fromEntries(required.map((h) => [h, cells[indexes[h]]]))
+    const parsed = rowSchema.safeParse({ ...row, value: String(row.value).replace(",", ".") })
+    if (!parsed.success || parsed.data.periodEnd < parsed.data.periodStart) throw new Error(`Fila ${n + 2} inválida`)
+    return parsed.data
+  })
+}
+
+router.post("/weap/import", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "Falta el archivo CSV", code: "MISSING_FILE" })
+    const rows = parseImportCsv(req.file.buffer.toString("utf8"))
+    const scenario = String(req.body.scenario || "sin_nombre").slice(0, 100)
+    const run = await prisma.weapRun.create({
+      data: { scenario, modelVersion: req.body.modelVersion || null, originalFileName: req.file.originalname,
+        results: { create: rows } }, include: { results: true },
+    })
+    res.status(201).json({ id: run.id, scenario: run.scenario, importedAt: run.importedAt, resultCount: run.results.length, contract: "elementCode, periodStart, periodEnd, variable, value, unit" })
+  } catch (e) { res.status(400).json({ error: e instanceof Error ? e.message : "CSV inválido", code: "WEAP_IMPORT_ERROR" }) }
+})
+
+router.get("/weap/runs", async (_req, res) => {
+  const runs = await prisma.weapRun.findMany({ orderBy: { importedAt: "desc" }, include: { results: true } })
+  res.json(runs)
+})
 
 router.get("/weap/scenarios", (_req, res) => {
   res.json(listScenarios())

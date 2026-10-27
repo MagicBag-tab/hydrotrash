@@ -11,9 +11,13 @@ import { env } from "./lib/env.js"
 
 const app = express()
 // HydroTrash frontend (Vite) corre en otro origen/puerto -> habilitar CORS
+const configuredOrigins = env.FRONTEND_URL ? env.FRONTEND_URL.split(",").map((s) => s.trim()).filter(Boolean) : []
+const corsOrigins = configuredOrigins.length
+  ? Array.from(new Set([...configuredOrigins, ...configuredOrigins.map((origin) => origin.replace("localhost", "127.0.0.1"))]))
+  : true
 app.use(
   cors({
-    origin: env.FRONTEND_URL ? env.FRONTEND_URL.split(",").map((s) => s.trim()) : true,
+    origin: corsOrigins,
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })

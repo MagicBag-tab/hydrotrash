@@ -13,7 +13,6 @@ const SEED_POINTS = [
   { code: "D-01", lat: 14.612, lng: -90.472, siteType: "desfogue", flow: "fuerte", notes: "Carretera a El Salvador, descarga directa" },
   { code: "D-02", lat: 14.609, lng: -90.475, siteType: "desfogue", flow: "leve", notes: "Residencial, arrastre plásticos" },
   { code: "D-03", lat: 14.606, lng: -90.478, siteType: "desfogue", flow: "fuerte", notes: "Vista Hermosa, probable origen" },
-  { code: "A-11", lat: 14.603, lng: -90.481, siteType: "alcantarilla", flow: "leve", notes: "Alcantarilla urbana" },
   { code: "D-05", lat: 14.6, lng: -90.484, siteType: "desfogue", flow: "leve", notes: "Tramo medio" },
   { code: "D-07", lat: 14.597, lng: -90.487, siteType: "tramo_rio", flow: "fuerte", notes: "Desembocadura, punto aguas abajo" },
 ]

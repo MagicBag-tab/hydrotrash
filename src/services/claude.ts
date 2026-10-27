@@ -1,6 +1,18 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { env } from "../lib/env.js"
 import type { TrashAnalysis } from "../types/trash.js"
+import { z } from "zod"
+
+export const visualAnalysisSchema = z.object({
+  glassPercentage: z.number().min(0).max(100), plasticPercentage: z.number().min(0).max(100),
+  paperPercentage: z.number().min(0).max(100), organicPercentage: z.number().min(0).max(100),
+  metalPercentage: z.number().min(0).max(100), otherPercentage: z.number().min(0).max(100),
+  eWastePercentage: z.number().min(0).max(100), hazardousPercentage: z.number().min(0).max(100),
+  specialTreatmentPercentage: z.number().min(0).max(100),
+  description: z.string().optional(), suggestedCleanup: z.string().optional(),
+  isEvaluable: z.boolean().default(true), visibleAccumulation: z.boolean().nullable().default(null),
+  visibleObstruction: z.boolean().nullable().default(null),
+})
 
 function hasRealAnthropicKey(): boolean {
   const k = env.ANTHROPIC_API_KEY
@@ -41,6 +53,9 @@ export function demoAnalysis(seed = ""): TrashAnalysis {
     specialTreatmentPercentage: special,
     description: "Análisis DEMO (sin API key): acumulación típica de desfogue urbano con predominio de plásticos arrastrados por escorrentía.",
     suggestedCleanup: "Instalar biobarda aguas abajo, jornada de limpieza y verificar descargas clandestinas en este punto.",
+    isEvaluable: true,
+    visibleAccumulation: true,
+    visibleObstruction: null,
   }
 }
 
@@ -51,7 +66,8 @@ function getClient(): Anthropic | null {
 
 const MODEL = "claude-3-5-sonnet-20241022"
 
-const SYSTEM_PROMPT = `You are a waste detection system. Analyze the image and estimate the composition of visible trash.
+const SYSTEM_PROMPT = `You are a waste detection system. Analyze only visible trash in the image. Do not infer mass, flow, pollution, bacteria, flooding, or kg/day.
+If the opening is not visible or image quality is insufficient, set isEvaluable false and visibleAccumulation/visibleObstruction null. Distinguish visible trash accumulation from obstruction of the opening.
 
 Include standard recyclables (glass, plastic, paper, organic, metal), plus:
 - e-waste: electronics, batteries, cables
@@ -70,7 +86,10 @@ Respond with a single JSON object only, no markdown or extra text. Use this exac
   "hazardousPercentage": number,
   "specialTreatmentPercentage": number,
   "description": "short description of what you see",
-  "suggestedCleanup": "brief recommendation to clean this area"
+  "suggestedCleanup": "brief recommendation to clean this area",
+  "isEvaluable": true,
+  "visibleAccumulation": true,
+  "visibleObstruction": false
 }`
 
 const PERCENTAGE_KEYS: (keyof TrashAnalysis)[] = [
@@ -122,7 +141,7 @@ export async function analyzeImageForTrash(
   const text =
     response.content?.find((block): block is { type: "text"; text: string } => block.type === "text")?.text ?? ""
   const cleaned = text.replace(/^```json\s*/i, "").replace(/\s*```\s*$/i, "").trim()
-  const parsed = JSON.parse(cleaned) as TrashAnalysis
+  const parsed = visualAnalysisSchema.parse(JSON.parse(cleaned))
 
   const raw: Record<string, number> = {}
   let sum = 0
@@ -142,5 +161,8 @@ export async function analyzeImageForTrash(
     ...raw,
     description: parsed.description,
     suggestedCleanup: parsed.suggestedCleanup,
+    isEvaluable: parsed.isEvaluable,
+    visibleAccumulation: parsed.visibleAccumulation,
+    visibleObstruction: parsed.visibleObstruction,
   } as TrashAnalysis
 }

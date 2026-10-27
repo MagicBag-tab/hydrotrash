@@ -97,7 +97,6 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
           <label>Tipo punto<br />
             <select value={meta.siteType} onChange={(e) => setMeta({ ...meta, siteType: e.target.value })}>
               <option value="desfogue">Desfogue</option>
-              <option value="alcantarilla">Alcantarilla</option>
               <option value="tramo_rio">Tramo de río</option>
             </select>
           </label>

@@ -20,7 +20,11 @@ export default function MapView({ refreshKey, onTrace }: { refreshKey: number; o
   useEffect(() => {
     if (!divRef.current || mapRef.current) return;
     const map = L.map(divRef.current).setView([CONTRERAS_CENTER.lat, CONTRERAS_CENTER.lng], 14);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+    const satellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { attribution: '© Google' });
+    const hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { attribution: '© Google' });
+    hybrid.addTo(map);
+    L.control.layers({ 'Google híbrido': hybrid, 'Google satélite': satellite, OpenStreetMap: osm }, undefined, { collapsed: false }).addTo(map);
     mapRef.current = map;
     layerRef.current = L.layerGroup().addTo(map);
   }, []);

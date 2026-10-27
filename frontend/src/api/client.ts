@@ -36,6 +36,7 @@ export interface TrashRecordResponse extends TrashAnalysis {
   outfallCode?: string | null;
   flowObserved?: string | null;
   notes?: string | null;
+  observation?: { id: string; provenance: string; review?: { status: string; correctionsJson?: string | null; reviewedAt: string } | null; point?: { code: string; name: string; weapElementCode?: string | null } | null } | null;
 }
 
 export interface HeatmapBucket {
@@ -106,6 +107,7 @@ export const api = {
   health: () => req<{ status: string }>('/health'),
   listTrash: () => req<TrashRecordResponse[]>('/api/trash'),
   getTrash: (id: string) => req<TrashRecordResponse>(`/api/trash/${id}`),
+  reviewTrash: (id: string, status: 'approved' | 'corrected' | 'rejected', corrections?: unknown) => req(`/api/trash/${id}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, corrections }) }),
   deleteTrash: (id: string) => req<void>(`/api/trash/${id}`, { method: 'DELETE' }),
   outfalls: () => req<Outfall[]>('/api/outfalls'),
   trace: (toId: string, radius = 1.5) =>
