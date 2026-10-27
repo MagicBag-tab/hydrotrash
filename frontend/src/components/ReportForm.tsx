@@ -95,7 +95,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
   return (
     <div className="card">
       <h2>Reporte</h2>
-      <p><small>Foto + GPS obligatorios. Enfoca la boca del desfogue o la basura acumulada.</small></p>
+      <p><small>Foto + GPS obligatorios. (Enfoca la boca del desfogue o la basura acumulada.)</small></p>
       <form onSubmit={submit}>
         <label>Foto (cámara en móvil)<br />
           <input type="file" accept="image/*" capture="environment" onChange={(e) => pickFile(e.target.files?.[0])} />
