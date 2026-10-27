@@ -35,7 +35,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
 
   return (
     <div className="card">
-      <h2>Escenarios WEAP <small>· modelo + supuestos para el jurado</small></h2>
+      <h2>Escenarios del río</h2>
       <div className="row">
         <label>Escenario
           <select value={sel} onChange={(e) => setSel(e.target.value)}>
@@ -70,7 +70,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
           <details style={{ marginTop: 8 }}>
             <summary>Supuestos del modelo (mostrar al jurado)</summary>
             <ul>{res.supuestos.map((s, i) => <li key={i}><small>{s}</small></li>)}</ul>
-            <p><small>WEAP real es desktop/COM sin REST: este adapter usa entradas reales de /api/trash y deja el contrato listo para enchufar WEAP después. Ref: SEI WEAP User Guide 2023, Funcagua, UVG.</small></p>
+            <p><small>Compara escenarios de manejo del río y sus posibles efectos sobre los residuos.</small></p>
           </details>
         </>
       )}

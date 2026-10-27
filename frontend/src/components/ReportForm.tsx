@@ -38,7 +38,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
       return;
     }
     if (f.size > 10 * 1024 * 1024) {
-      setError('La foto supera 10MB (límite del backend). Toma otra con menor resolución.');
+      setError('La foto supera 10 MB. Toma otra con menor resolución.');
       return;
     }
     setError('');
@@ -77,14 +77,14 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
     const la = Number(lat);
     const ln = Number(lng);
     if (!Number.isFinite(la) || !Number.isFinite(ln) || la < -90 || la > 90 || ln < -180 || ln > 180) {
-      setError('Latitud/longitud inválidas. El backend exige MISSING_COORDINATES si faltan.');
+      setError('Latitud o longitud inválidas. Revisa la ubicación del reporte.');
       return;
     }
     try {
-      setStatus('Subiendo… luego Claude analiza (20-60s, no cierres)…');
+      setStatus('Procesando reporte (20–60 s, no cierres esta ventana)…');
       const r = await api.analyze(file, la, ln, meta);
       setResult(r.trash);
-      setStatus(`Guardado con id ${r.id}`);
+      setStatus('Reporte guardado correctamente.');
       onCreated(r.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -128,7 +128,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
           <input value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} placeholder="Notas adicionales (opcional)" style={{ width: '100%' }} />
         </label>
         <div style={{ marginTop: 8 }}>
-          <button type="submit">Analizar con Claude</button>
+        <button type="submit">Guardar reporte</button>
         </div>
       </form>
       {status && <p>{status}</p>}

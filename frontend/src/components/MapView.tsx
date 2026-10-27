@@ -47,7 +47,7 @@ export default function MapView({ refreshKey, onTrace }: { refreshKey: number; o
           }
         } else {
           const h = await api.heatmap(precision);
-          setInfo(`${h.buckets.length} celdas (precisión ${h.precision}) — click un punto para trazar origen`);
+          setInfo(`${h.buckets.length} zonas — selecciona un punto para consultar su origen probable`);
           const max = Math.max(1, ...h.buckets.map((b: HeatmapBucket) => b.count));
           for (const b of h.buckets) {
             const r = 12 + (b.count / max) * 22;
@@ -70,7 +70,7 @@ export default function MapView({ refreshKey, onTrace }: { refreshKey: number; o
         <button type="button" className={mode === 'puntos' ? '' : 'ghost'} onClick={() => setMode('puntos')}>Puntos</button>
         <button type="button" className={mode === 'calor' ? '' : 'ghost'} onClick={() => setMode('calor')}>Calor</button>
         {mode === 'calor' && (
-          <label>Precisión geohash
+          <label>Nivel de detalle
             <select value={precision} onChange={(e) => setPrecision(Number(e.target.value))}>
               <option value={4}>4 — zonas grandes</option>
               <option value={5}>5 — default</option>
@@ -79,7 +79,7 @@ export default function MapView({ refreshKey, onTrace }: { refreshKey: number; o
             </select>
           </label>
         )}
-        <small>{info} · click un punto para ver su probable origen</small>
+        <small>{info}</small>
       </div>
       <div ref={divRef} style={{ height: 380, borderRadius: 10, marginTop: 8 }} />
     </div>
