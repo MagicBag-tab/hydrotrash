@@ -1,6 +1,26 @@
-# backend-trashclient
+# HydroTrash · Río Contreras
 
 API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite), optional Cloudinary for images, pre-aggregated heat maps, and GeoJSON routes. See **AGENTS.md** for full conventions.
+
+HydroTrash registra reportes fotográficos de desfogues y tramos del río Contreras, analiza la basura visible con Claude, muestra los puntos en mapa y permite contrastar resultados hidrológicos con WEAP Desktop.
+
+![Pantalla principal](assets/hydrotrash-home.png)
+
+## Funcionalidades principales
+
+- Reportes con fotografía, coordenadas GPS, tipo de punto, flujo y notas de campo.
+- Clasificación de vidrio, plástico, papel, orgánico, metal, e-waste, peligroso y tratamiento especial.
+- Mapa de puntos y mapa de calor con Google híbrido, Google satélite y OpenStreetMap.
+- Revisión humana del análisis, conservando el resultado original de la IA.
+- Exportación de reportes a CSV desde el dashboard.
+- Trazabilidad de posibles fuentes aguas arriba.
+- Integración de solo lectura con WEAP Desktop mediante COM en Windows.
+
+### Capturas
+
+| Reportes y análisis | Mapa del río | Escenarios WEAP |
+|---|---|---|
+| ![Análisis](assets/hydrotrash-analisis-imagen-ejemplo.png) | ![Mapa](assets/hydrotrash-mapa.png) | ![WEAP](assets/hydrotrash-weap.png) |
 
 ---
 
@@ -158,3 +178,48 @@ Covers: health, GET/POST/DELETE trash, GET trash by id, heatmap, routes/optimize
 - **Cloudinary** (optional) for images
 - Anthropic SDK (Claude 3.5 Sonnet)
 - ngeohash for heat map aggregation
+
+## Frontend
+
+En otra terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+La interfaz se abre normalmente en `http://localhost:5173`.
+
+## Flujo recomendado de uso
+
+1. Registra un desfogue o tramo de río con fotografía y GPS.
+2. Revisa el resultado generado y confirma el análisis desde el detalle.
+3. Consulta los reportes en el dashboard o visualízalos en el mapa.
+4. Usa **Descargar datos CSV** para exportar los registros cargados.
+5. Ejecuta WEAP y compara/importa sus resultados mediante el puente.
+
+## Integración con WEAP Desktop
+
+El puente COM funciona en Windows con WEAP instalado y abierto. Es de solo lectura: no modifica el área, no cambia escenarios y no ejecuta cálculos.
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+py -m pip install -r weap-bridge\requirements.txt
+Copy-Item weap-bridge\config.example.json weap-bridge\config.json
+```
+
+Edita `weap-bridge/config.json` con los nombres exactos del área, escenario, rama, variable y unidad de WEAP. Este archivo es local y está excluido de Git.
+
+Con WEAP abierto y el área activa:
+
+```powershell
+python weap-bridge/weap_com_bridge.py --config weap-bridge/config.json diagnose
+python weap-bridge/weap_com_bridge.py --config weap-bridge/config.json extract-one --output resultados.csv
+python weap-bridge/weap_com_bridge.py --config weap-bridge/config.json import resultados.csv
+```
+
+Los resultados importados se consultan en `GET /api/weap/runs`. El endpoint `/api/weap/results?scenarioId=integral` corresponde a los escenarios internos del adaptador HydroTrash; no se debe usar con nombres de WEAP como `Reference`.
+
+Consulta la guía específica en [`weap-bridge/README.md`](weap-bridge/README.md).
