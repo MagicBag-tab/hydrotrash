@@ -72,7 +72,7 @@ If the opening is not visible or image quality is insufficient, set isEvaluable 
 Include standard recyclables (glass, plastic, paper, organic, metal), plus:
 - e-waste: electronics, batteries, cables
 - hazardous: chemicals, paint, medical, sharp objects
-- special treatment: items that need dedicated collection (e.g. tires, mattresses, large appliances)
+- special treatment: chemical products or residues that require dedicated handling (e.g. cleaning products, solvents, oils, paint)
 
 Respond with a single JSON object only, no markdown or extra text. Use this exact shape (percentages must sum to 100):
 {

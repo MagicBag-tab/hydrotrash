@@ -13,6 +13,14 @@ const PERCENT_LABELS: Array<[keyof TrashAnalysis, string]> = [
   ['otherPercentage', 'Otro'],
 ];
 
+const DISPLAY_PERCENT_LABELS: Array<[keyof TrashAnalysis, string]> = [
+  ['plasticPercentage', 'Desechos plásticos'], ['organicPercentage', 'Desechos orgánicos'],
+  ['paperPercentage', 'Residuos celulósicos flotantes (papeles y cartón que aún navegan)'],
+  ['glassPercentage', 'Desechos o residuos de vidrio'], ['metalPercentage', 'Desechos metálicos industriales y de aluminio (latas)'],
+  ['hazardousPercentage', 'Peligrosos'], ['eWastePercentage', 'Desechos electrónicos'],
+  ['specialTreatmentPercentage', 'Productos químicos'], ['otherPercentage', 'Otros residuos'],
+];
+
 export default function ReportForm({ onCreated }: { onCreated: (id: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
@@ -86,7 +94,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
 
   return (
     <div className="card">
-      <h2>Reportar desfogue</h2>
+      <h2>Reporte</h2>
       <p><small>Foto + GPS obligatorios. Enfoca la boca del desfogue o la basura acumulada.</small></p>
       <form onSubmit={submit}>
         <label>Foto (cámara en móvil)<br />
@@ -94,20 +102,20 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
         </label>
         {preview && <div><img src={preview} alt="preview" style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} /></div>}
         <div className="row">
-          <label>Tipo punto<br />
+          <label>Punto observado<br />
             <select value={meta.siteType} onChange={(e) => setMeta({ ...meta, siteType: e.target.value })}>
               <option value="desfogue">Desfogue</option>
               <option value="tramo_rio">Tramo de río</option>
             </select>
           </label>
-          <label>Código (ej. D-03)<br />
-            <input value={meta.outfallCode} onChange={(e) => setMeta({ ...meta, outfallCode: e.target.value })} placeholder="D-03" />
+          <label>Código de área y año<br />
+            <input value={meta.outfallCode} onChange={(e) => setMeta({ ...meta, outfallCode: e.target.value })} placeholder="UVG26stb-001" />
           </label>
-          <label>Flujo observado<br />
+          <label>Caudal del río<br />
             <select value={meta.flowObserved} onChange={(e) => setMeta({ ...meta, flowObserved: e.target.value })}>
-              <option value="seco">Seco</option>
-              <option value="leve">Leve</option>
-              <option value="fuerte">Fuerte</option>
+              <option value="sequia">Sequía</option>
+              <option value="normal">Normal</option>
+              <option value="crecida">Crecida (inundación)</option>
             </select>
           </label>
         </div>
@@ -117,7 +125,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
           <label>&nbsp;<br /><button type="button" onClick={useGps}>Usar mi GPS</button></label>
         </div>
         <label>Notas de campo<br />
-          <input value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} placeholder="Olor fuerte, espuma, taponamiento…" style={{ width: '100%' }} />
+          <input value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} placeholder="Notas adicionales (opcional)" style={{ width: '100%' }} />
         </label>
         <div style={{ marginTop: 8 }}>
           <button type="submit">Analizar con Claude</button>
@@ -129,7 +137,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
         <div>
           <h3>Resultado</h3>
           <ul>
-            {PERCENT_LABELS.map(([k, label]) => (
+            {DISPLAY_PERCENT_LABELS.map(([k, label]) => (
               <li key={k}>{label}: {(result[k] as number).toFixed(1)}%</li>
             ))}
           </ul>

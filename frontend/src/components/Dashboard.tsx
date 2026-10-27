@@ -3,14 +3,14 @@ import { api, type TrashRecordResponse } from '../api/client';
 
 function top3(r: TrashRecordResponse): string {
   const entries: Array<[string, number]> = [
-    ['plástico', r.plasticPercentage],
-    ['orgánico', r.organicPercentage],
-    ['papel', r.paperPercentage],
-    ['vidrio', r.glassPercentage],
-    ['metal', r.metalPercentage],
-    ['peligroso', r.hazardousPercentage],
-    ['e-waste', r.eWastePercentage],
-    ['trat. especial', r.specialTreatmentPercentage],
+    ['desechos plásticos', r.plasticPercentage],
+    ['desechos orgánicos', r.organicPercentage],
+    ['residuos celulósicos flotantes', r.paperPercentage],
+    ['desechos de vidrio', r.glassPercentage],
+    ['desechos metálicos', r.metalPercentage],
+    ['peligrosos', r.hazardousPercentage],
+    ['desechos electrónicos', r.eWastePercentage],
+    ['productos químicos', r.specialTreatmentPercentage],
     ['otro', r.otherPercentage],
   ];
   return entries
@@ -56,6 +56,7 @@ export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number
     if (filter === 'peligrosos') return r.hazardousPercentage > 10;
     if (filter === 'plastico') return r.plasticPercentage > 40;
     if (filter === 'desfogues') return (r.siteType || '').toLowerCase() === 'desfogue';
+    if (filter === 'tramos') return (r.siteType || '').toLowerCase() === 'tramo_rio';
     return true;
   });
 
@@ -67,8 +68,8 @@ export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number
       <h2>Reportes Río Contreras ({filtered.length}/{items.length})</h2>
       <p><small>Promedio plástico {avgPlastic.toFixed(1)}% · Peligrosos (&gt;10%): {hazardousCount}</small></p>
       <div className="row">
-        {['todos', 'desfogues', 'plastico', 'peligrosos'].map((f) => (
-          <button key={f} type="button" className={filter === f ? '' : 'ghost'} onClick={() => setFilter(f)}>{f}</button>
+        {[['todos', 'Todos'], ['desfogues', 'Desfogues'], ['tramos', 'Tramos de ríos']].map(([value, label]) => (
+          <button key={value} type="button" className={filter === value ? '' : 'ghost'} onClick={() => setFilter(value)}>{label}</button>
         ))}
         <button type="button" className="ghost" onClick={load}>Recargar</button>
         <button type="button" className="ghost" onClick={downloadCsv} disabled={!items.length}>Descargar datos CSV</button>
