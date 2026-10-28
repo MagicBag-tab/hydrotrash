@@ -15,12 +15,43 @@ HydroTrash registra reportes fotográficos de desfogues y tramos del río Contre
 - Exportación de reportes a CSV desde el dashboard.
 - Trazabilidad de posibles fuentes aguas arriba.
 - Integración de solo lectura con WEAP Desktop mediante COM en Windows.
+- Interfaz responsive optimizada para celulares y trabajo de campo.
+- Navegación simplificada para usuarios finales, sin indicadores técnicos del servidor.
 
 ### Capturas
 
 | Reportes y análisis | Mapa del río | Escenarios WEAP |
 |---|---|---|
 | ![Análisis](assets/hydrotrash-analisis-imagen-ejemplo.png) | ![Mapa](assets/hydrotrash-mapa.png) | ![WEAP](assets/hydrotrash-weap.png) |
+
+### Clasificación visible de residuos
+
+La aplicación conserva los nombres técnicos de los campos para mantener la compatibilidad de los datos, pero muestra etiquetas más claras para las personas usuarias:
+
+| Campo de análisis | Etiqueta en la aplicación |
+|---|---|
+| `plasticPercentage` | Desechos plásticos |
+| `organicPercentage` | Desechos orgánicos |
+| `paperPercentage` | Residuos celulósicos flotantes (Papeles y cartón que aún navegan) |
+| `glassPercentage` | Desechos o residuos de vidrio |
+| `metalPercentage` | Desechos metálicos industriales y de aluminio (latas) |
+| `eWastePercentage` | Desechos electrónicos |
+| `hazardousPercentage` | Peligrosos |
+| `specialTreatmentPercentage` | Productos químicos |
+| `otherPercentage` | Otros residuos |
+
+El análisis se limita a los residuos visibles en la fotografía. La revisión humana permite confirmar el resultado sin eliminar el análisis original.
+
+### Experiencia en celular
+
+- El formulario se adapta a una sola columna.
+- Los campos de cámara, GPS, ubicación y notas ocupan el ancho disponible.
+- Los botones tienen un área táctil amplia.
+- Los reportes se muestran como tarjetas fáciles de leer.
+- El mapa y sus controles se ajustan a pantallas pequeñas.
+- Las notas de campo son opcionales.
+
+El flujo recomendado desde un celular es: **tomar fotografía → usar GPS → seleccionar el punto observado → indicar el caudal → guardar reporte**.
 
 ---
 
