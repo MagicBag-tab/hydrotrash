@@ -38,8 +38,7 @@ La aplicación conserva los nombres técnicos de los campos para mantener la com
 | `glassPercentage` | Desechos o residuos de vidrio |
 | `metalPercentage` | Desechos metálicos industriales y de aluminio (latas) |
 | `eWastePercentage` | Desechos electrónicos |
-| `hazardousPercentage` | Peligrosos |
-| `specialTreatmentPercentage` | Productos químicos |
+| `hazardousPercentage` + `specialTreatmentPercentage` | Productos químicos y peligrosos |
 | `otherPercentage` | Otros residuos |
 
 El análisis se limita a los residuos visibles en la fotografía. La revisión humana permite confirmar el resultado sin eliminar el análisis original.

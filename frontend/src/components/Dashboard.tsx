@@ -8,7 +8,7 @@ function top3(r: TrashRecordResponse): string {
     ['residuos celulósicos flotantes', r.paperPercentage],
     ['desechos de vidrio', r.glassPercentage],
     ['desechos metálicos', r.metalPercentage],
-    ['peligrosos', r.hazardousPercentage],
+    ['productos químicos y peligrosos', r.hazardousPercentage + r.specialTreatmentPercentage],
     ['desechos electrónicos', r.eWastePercentage],
     ['productos químicos', r.specialTreatmentPercentage],
     ['otro', r.otherPercentage],
@@ -81,9 +81,8 @@ export default function Dashboard({ refreshKey, onSelect }: { refreshKey: number
             <strong>{r.outfallCode || r.siteType || 'Punto'} · {new Date(r.createdAt).toLocaleString()}</strong>
             <div><small>{r.latitude.toFixed(5)}, {r.longitude.toFixed(5)} · flujo: {r.flowObserved || '—'}</small></div>
             <div>{top3(r)}</div>
-            {r.hazardousPercentage > 10 && <span className="badge danger">peligroso</span>}
+            {r.hazardousPercentage + r.specialTreatmentPercentage > 10 && <span className="badge danger">productos químicos y peligrosos</span>}
             {r.eWastePercentage > 5 && <span className="badge warn">e-waste</span>}
-            {r.specialTreatmentPercentage > 10 && <span className="badge info">trat. especial</span>}
             {r.description && <div><small>{r.description}</small></div>}
             <div className="row">
               <button type="button" onClick={() => onSelect(r.id)}>Ver</button>

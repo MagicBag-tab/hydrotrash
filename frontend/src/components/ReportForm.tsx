@@ -17,8 +17,8 @@ const DISPLAY_PERCENT_LABELS: Array<[keyof TrashAnalysis, string]> = [
   ['plasticPercentage', 'Desechos plásticos'], ['organicPercentage', 'Desechos orgánicos'],
   ['paperPercentage', 'Residuos celulósicos flotantes (Papeles y cartón que aún navegan)'],
   ['glassPercentage', 'Desechos o residuos de vidrio'], ['metalPercentage', 'Desechos metálicos industriales y de aluminio (latas)'],
-  ['hazardousPercentage', 'Peligrosos'], ['eWastePercentage', 'Desechos electrónicos'],
-  ['specialTreatmentPercentage', 'Productos químicos'], ['otherPercentage', 'Otros residuos'],
+  ['hazardousPercentage', 'Productos químicos y peligrosos'], ['eWastePercentage', 'Desechos electrónicos'],
+  ['otherPercentage', 'Otros residuos'],
 ];
 
 export default function ReportForm({ onCreated }: { onCreated: (id: string) => void }) {
@@ -138,7 +138,7 @@ export default function ReportForm({ onCreated }: { onCreated: (id: string) => v
           <h3>Resultado</h3>
           <ul>
             {DISPLAY_PERCENT_LABELS.map(([k, label]) => (
-              <li key={k}>{label}: {(result[k] as number).toFixed(1)}%</li>
+              <li key={k}>{label}: {(k === 'hazardousPercentage' ? (result.hazardousPercentage + result.specialTreatmentPercentage) : result[k] as number).toFixed(1)}%</li>
             ))}
           </ul>
           {result.description && <p><strong>Observado:</strong> {result.description}</p>}
