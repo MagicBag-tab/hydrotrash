@@ -7,10 +7,11 @@ body { margin: 0; background: #f1f8f4; color: #123; }
 code { background: #eef4f0; padding: 2px 6px; border-radius: 6px; }
 h1 span { color: #0a7a3d; }
 small { color: #567; }
-button { background: #0a7a3d; color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; margin-right: 6px; }
+button { background: #0a7a3d; color: #fff; border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; margin-right: 6px; min-height: 40px; }
+button:disabled { opacity: .55; cursor: not-allowed; }
 button.ghost { background: #e7f0ea; color: #123; }
 label { display: block; margin: 8px 0; font-size: 14px; }
-input, select { padding: 8px; border: 1px solid #c9dccd; border-radius: 8px; margin-top: 4px; }
+input, select { box-sizing: border-box; padding: 10px; border: 1px solid #c9dccd; border-radius: 8px; margin-top: 4px; max-width: 100%; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; }
 .mini { border: 1px solid #d8e8de; border-radius: 10px; padding: 10px; background: #fbfffc; }
@@ -20,3 +21,19 @@ input, select { padding: 8px; border: 1px solid #c9dccd; border-radius: 8px; mar
 .badge.info { background: #175cd3; }
 table { border-collapse: collapse; margin-top: 8px; }
 td { border-bottom: 1px solid #eee; padding: 4px 12px 4px 0; }
+
+@media (max-width: 640px) {
+  .wrap { padding: 12px; }
+  h1 { font-size: 1.55rem; margin: 8px 0 4px; }
+  .card { padding: 12px; border-radius: 10px; }
+  .row { gap: 8px; align-items: stretch; }
+  .row > label, .row > input, .row > select { flex: 1 1 100%; min-width: 0; }
+  .row > button { flex: 1 1 auto; margin-right: 0; }
+  form > label, form .row label { width: 100%; }
+  form input, form select { width: 100%; }
+  input[type='file'] { padding: 8px 4px; font-size: 13px; }
+  .grid { grid-template-columns: 1fr; }
+  .mini .row { display: grid; grid-template-columns: 1fr 1fr; }
+  .mini .row button { width: 100%; }
+  .leaflet-control-layers { font-size: 13px; }
+}
