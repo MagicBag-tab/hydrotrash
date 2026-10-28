@@ -4,6 +4,8 @@ API para detección de residuos (Claude 3.5 Sonnet) y almacenamiento geográfico
 
 ---
 
+Esta guía contiene la documentación técnica: tecnologías, arquitectura, instalación, variables de entorno, base de datos, API, pruebas, Docker y conexión con WEAP. La guía funcional para usuarios está en [`README.md`](README.md).
+
 ## Índice
 
 1. [Descripción general](#1-descripción-general)

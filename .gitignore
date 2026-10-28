@@ -15,4 +15,5 @@ data/
 # WEAP local configuration and generated exports
 weap-bridge/config.json
 resultados.csv
+AGENTS.md
 

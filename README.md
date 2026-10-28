@@ -1,6 +1,8 @@
 # HydroTrash · Río Contreras
 
-API for trash detection (Claude 3.5 Sonnet), geographic storage (Turso or SQLite), optional Cloudinary for images, pre-aggregated heat maps, and GeoJSON routes. See **AGENTS.md** for full conventions.
+Herramienta de monitoreo del río Contreras para registrar residuos, revisar análisis de fotografías y consultar su distribución geográfica.
+
+La información técnica para instalación, arquitectura, API, base de datos y despliegue está en [`DOCUMENTATION.md`](DOCUMENTATION.md).
 
 HydroTrash registra reportes fotográficos de desfogues y tramos del río Contreras, analiza la basura visible con Claude, muestra los puntos en mapa y permite contrastar resultados hidrológicos con WEAP Desktop.
 
@@ -55,7 +57,9 @@ El flujo recomendado desde un celular es: **tomar fotografía → usar GPS → s
 
 ---
 
-## How to run everything
+## Instalación técnica
+
+Para requisitos, variables de entorno, migraciones, comandos y configuración de producción, consulta [`DOCUMENTATION.md`](DOCUMENTATION.md).
 
 ### Prerequisites
 
