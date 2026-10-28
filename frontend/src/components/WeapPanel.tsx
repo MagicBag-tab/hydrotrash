@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, type WeapScenario, type WeapResult } from '../api/client';
+import { api, type WeapScenario, type WeapResult, type WeapRun } from '../api/client';
 
 export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
   const [scenarios, setScenarios] = useState<WeapScenario[]>([]);
@@ -11,9 +11,11 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
   const [base, setBase] = useState<WeapResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [runs, setRuns] = useState<WeapRun[]>([]);
 
   useEffect(() => {
     api.weapScenarios().then(setScenarios).catch((e) => setErr(String(e)));
+    api.weapRuns().then(setRuns).catch(() => setRuns([]));
   }, []);
 
   async function run() {
@@ -32,6 +34,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
   useEffect(() => { run(); }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxP = Math.max(1, base?.totales.plastico ?? 1, res?.totales.plastico ?? 1);
+  const latestRun = runs[0];
 
   return (
     <div className="card">
@@ -74,6 +77,23 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
           </details>
         </>
       )}
+      <div style={{ marginTop: 16, borderTop: '1px solid #d8e8de', paddingTop: 12 }}>
+        <h3>Resultados importados desde WEAP</h3>
+        {latestRun ? (
+          <>
+            <p><small>Escenario: <strong>{latestRun.scenario}</strong> · {latestRun.results.length} registros · {new Date(latestRun.importedAt).toLocaleString()}</small></p>
+            <div style={{ overflowX: 'auto' }}>
+              <table>
+                <thead><tr><th>Punto</th><th>Periodo</th><th>Variable</th><th>Valor</th><th>Unidad</th></tr></thead>
+                <tbody>{latestRun.results.slice(0, 20).map((row) => (
+                  <tr key={row.id}><td>{row.elementCode}</td><td>{row.periodStart.slice(0, 10)} – {row.periodEnd.slice(0, 10)}</td><td>{row.variable}</td><td>{row.value}</td><td>{row.unit}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+            {latestRun.results.length > 20 && <small>Mostrando los primeros 20 registros.</small>}
+          </>
+        ) : <p><small>Aún no hay resultados importados desde WEAP.</small></p>}
+      </div>
     </div>
   );
 }

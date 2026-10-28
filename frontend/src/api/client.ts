@@ -103,6 +103,15 @@ export interface WeapResult {
   reduccionVsBase?: { plasticoPct: number; organicoPct: number };
 }
 
+export interface WeapRun {
+  id: string;
+  scenario: string;
+  modelVersion?: string | null;
+  originalFileName?: string | null;
+  importedAt: string;
+  results: Array<{ id: string; elementCode: string; periodStart: string; periodEnd: string; variable: string; value: number; unit: string }>;
+}
+
 export const api = {
   health: () => req<{ status: string }>('/health'),
   listTrash: () => req<TrashRecordResponse[]>('/api/trash'),
@@ -115,6 +124,7 @@ export const api = {
       `/api/contamination/trace?toId=${toId}&radius=${radius}`
     ),
   weapScenarios: () => req<WeapScenario[]>('/api/weap/scenarios'),
+  weapRuns: () => req<WeapRun[]>('/api/weap/runs'),
   weapResults: (scenarioId: string, params: Record<string, number> = {}) => {
     const q = new URLSearchParams({ scenarioId, ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])) });
     return req<WeapResult>(`/api/weap/results?${q.toString()}`);
