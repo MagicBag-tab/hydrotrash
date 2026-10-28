@@ -16,7 +16,8 @@ export async function createTrashRecord(
   imageUrl?: string | null,
   meta?: TrashSiteMeta
 ) {
-  return prisma.trashRecord.create({
+  const code = meta?.outfallCode?.trim() || null
+  const record = await prisma.trashRecord.create({
     data: {
       latitude,
       longitude,
@@ -39,6 +40,18 @@ export async function createTrashRecord(
       notes: meta?.notes?.trim() || null,
     },
   })
+  if (code) {
+    const point = await prisma.observationPoint.upsert({
+      where: { code },
+      create: { code, name: meta?.siteType === "tramo_rio" ? "Tramo de río" : "Punto observado", latitude, longitude },
+      update: { latitude, longitude },
+    })
+    const observation = await prisma.observation.create({
+      data: { pointId: point.id, capturedAt: record.createdAt, photoUrl: imageUrl ?? null, notes: meta?.notes ?? null, provenance: source },
+    })
+    return prisma.trashRecord.update({ where: { id: record.id }, data: { observationId: observation.id } })
+  }
+  return record
 }
 
 export async function updateTrashRecordImageUrl(id: string, imageUrl: string) {
@@ -64,4 +77,8 @@ export async function deleteTrashRecord(id: string) {
   return prisma.trashRecord.delete({
     where: { id },
   })
+}
+
+export async function listObservationPoints() {
+  return prisma.observationPoint.findMany({ orderBy: { code: "asc" }, include: { _count: { select: { observations: true } } } })
 }
