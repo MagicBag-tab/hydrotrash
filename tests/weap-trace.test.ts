@@ -34,7 +34,6 @@ describe("HydroTrash Contreras: trace + WEAP + demo", () => {
 
   afterAll(async () => {
     await prisma.trashRecord.deleteMany({ where: { id: { in: ids } } })
-    await prisma.$disconnect()
   })
 
   it("demoAnalysis suma 100 y domina plástico", () => {

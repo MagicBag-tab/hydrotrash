@@ -14,7 +14,6 @@ describe("API endpoints", () => {
         // ignore
       }
     }
-    await prisma.$disconnect()
   })
 
   describe("GET /health", () => {
@@ -135,13 +134,12 @@ describe("API endpoints", () => {
     })
 
     it("returns 204 and deletes record when id exists", async () => {
-      if (!createdId) return
-      const res = await request(app).delete(`/api/trash/${createdId}`)
+      const record = await prisma.trashRecord.create({ data: { latitude: -12.05, longitude: -77.05, source: "test-delete" } })
+      const res = await request(app).delete(`/api/trash/${record.id}`)
       expect(res.status).toBe(204)
 
-      const getRes = await request(app).get(`/api/trash/${createdId}`)
+      const getRes = await request(app).get(`/api/trash/${record.id}`)
       expect(getRes.status).toBe(404)
-      createdId = "" // so afterAll does not try to delete again
     })
   })
 })
