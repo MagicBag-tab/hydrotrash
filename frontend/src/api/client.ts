@@ -1,5 +1,5 @@
 // HydroTrash · cliente tipado espejo de src/types/trash.ts del backend
-const BASE: string = (import.meta as unknown as { env: Record<string, string | undefined> }).env.VITE_API_URL || '';
+const BASE: string = ((import.meta as unknown as { env: Record<string, string | undefined> }).env.VITE_API_URL || '').replace(/\/+$/, '');
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init);
