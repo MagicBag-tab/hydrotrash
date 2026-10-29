@@ -5,6 +5,7 @@ const envSchema = z.object({
   // Pon tu key real (sk-ant-...) para usar Claude 3.5 Sonnet.
   ANTHROPIC_API_KEY: z.string().optional().default("demo"),
   GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   AI_PROVIDER: z.enum(["anthropic", "gemini", "demo"]).default("anthropic"),
   // Prisma CLI (generate, migrate) requires this and only accepts file: for SQLite. At runtime, if TURSO_* are set, the app uses Turso and ignores this.
   DATABASE_URL: z.string().refine((url) => url.startsWith("file:"), {

@@ -113,12 +113,16 @@ export async function analyzeImageForTrash(
   mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
 ): Promise<TrashAnalysis> {
   if (env.AI_PROVIDER === "gemini" && hasGeminiKey()) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\nAnalyze the trash in this image and respond with the JSON object only.` }, { inline_data: { mime_type: mediaType, data: imageBase64 } }] }], generationConfig: { responseMimeType: "application/json" } }),
     })
-    if (!response.ok) throw new Error(`Gemini API error: HTTP ${response.status}`)
+    if (!response.ok) {
+      const detail = await response.text()
+      console.error("Gemini API error", response.status, detail.slice(0, 1000))
+      throw new Error(`Gemini API error: HTTP ${response.status}. Revisa GEMINI_API_KEY, GEMINI_MODEL y la cuota.`)
+    }
     const body = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
     const text = body.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text ?? ""
     const parsed = visualAnalysisSchema.parse(JSON.parse(text.replace(/^```json\s*/i, "").replace(/\s*```\s*$/i, "").trim()))
