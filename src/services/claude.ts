@@ -64,6 +64,10 @@ function getClient(): Anthropic | null {
   return new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
 }
 
+function hasGeminiKey(): boolean {
+  return Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.length > 20)
+}
+
 const MODEL = "claude-3-5-sonnet-20241022"
 
 const SYSTEM_PROMPT = `You are a waste detection system. Analyze only visible trash in the image. Do not infer mass, flow, pollution, bacteria, flooding, or kg/day.
@@ -108,6 +112,18 @@ export async function analyzeImageForTrash(
   imageBase64: string,
   mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
 ): Promise<TrashAnalysis> {
+  if (env.AI_PROVIDER === "gemini" && hasGeminiKey()) {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: `${SYSTEM_PROMPT}\nAnalyze the trash in this image and respond with the JSON object only.` }, { inline_data: { mime_type: mediaType, data: imageBase64 } }] }], generationConfig: { responseMimeType: "application/json" } }),
+    })
+    if (!response.ok) throw new Error(`Gemini API error: HTTP ${response.status}`)
+    const body = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    const text = body.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text ?? ""
+    const parsed = visualAnalysisSchema.parse(JSON.parse(text.replace(/^```json\s*/i, "").replace(/\s*```\s*$/i, "").trim()))
+    return normalizeAnalysis(parsed)
+  }
   const client = getClient()
   // Sin API key real -> demo heurístico para hackatón (no llama a Anthropic)
   if (!client) {
@@ -143,6 +159,10 @@ export async function analyzeImageForTrash(
   const cleaned = text.replace(/^```json\s*/i, "").replace(/\s*```\s*$/i, "").trim()
   const parsed = visualAnalysisSchema.parse(JSON.parse(cleaned))
 
+  return normalizeAnalysis(parsed)
+}
+
+function normalizeAnalysis(parsed: z.infer<typeof visualAnalysisSchema>): TrashAnalysis {
   const raw: Record<string, number> = {}
   let sum = 0
   for (const key of PERCENTAGE_KEYS) {
