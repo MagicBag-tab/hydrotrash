@@ -125,6 +125,7 @@ export const api = {
     ),
   weapScenarios: () => req<WeapScenario[]>('/api/weap/scenarios'),
   weapRuns: () => req<WeapRun[]>('/api/weap/runs'),
+  observationPointsExport: () => fetch(`${BASE}/api/observation-points/export`).then((r) => r.blob()),
   weapResults: (scenarioId: string, params: Record<string, number> = {}) => {
     const q = new URLSearchParams({ scenarioId, ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])) });
     return req<WeapResult>(`/api/weap/results?${q.toString()}`);

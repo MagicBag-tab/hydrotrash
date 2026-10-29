@@ -36,6 +36,12 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
   const maxP = Math.max(1, base?.totales.plastico ?? 1, res?.totales.plastico ?? 1);
   const latestRun = runs[0];
 
+  async function exportPoints() {
+    const blob = await api.observationPointsExport();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = 'hydrotrash-puntos-weap.csv'; link.click(); URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="card">
       <h2>Escenarios del río</h2>
@@ -79,6 +85,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
       )}
       <div style={{ marginTop: 16, borderTop: '1px solid #d8e8de', paddingTop: 12 }}>
         <h3>Resultados importados desde WEAP</h3>
+        <button type="button" className="ghost" onClick={exportPoints}>Descargar puntos para WEAP</button>
         {latestRun ? (
           <>
             <p><small>Escenario: <strong>{latestRun.scenario}</strong> · {latestRun.results.length} registros · {new Date(latestRun.importedAt).toLocaleString()}</small></p>

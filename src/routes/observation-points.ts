@@ -12,4 +12,18 @@ router.get("/observation-points", async (_req, res) => {
   }
 })
 
+router.get("/observation-points/export", async (_req, res) => {
+  try {
+    const points = await listObservationPoints()
+    const esc = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`
+    const rows = [
+      ["elementCode", "name", "latitude", "longitude", "weapElementCode", "observationCount"],
+      ...points.map((point) => [point.code, point.name, point.latitude, point.longitude, point.weapElementCode, point._count.observations]),
+    ]
+    res.type("text/csv").send("\ufeff" + rows.map((row) => row.map(esc).join(",")).join("\n"))
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : "Failed to export observation points", code: "POINTS_EXPORT_ERROR" })
+  }
+})
+
 export default router
