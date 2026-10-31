@@ -9,6 +9,7 @@ import weapRoutes from "./routes/weap.js"
 import demoRoutes from "./routes/demo.js"
 import { env } from "./lib/env.js"
 import observationPointsRoutes from "./routes/observation-points.js"
+import weapFieldExportRoutes from "./routes/weap-field-export.js"
 
 const app = express()
 // HydroTrash frontend (Vite) corre en otro origen/puerto -> habilitar CORS
@@ -32,6 +33,7 @@ app.use("/api", outfallsRoutes)
 app.use("/api", weapRoutes)
 app.use("/api", demoRoutes)
 app.use("/api", observationPointsRoutes)
+app.use("/api", weapFieldExportRoutes)
 app.use("/api/routes", routesOptimized)
 
 app.get("/health", (_req, res) => {
