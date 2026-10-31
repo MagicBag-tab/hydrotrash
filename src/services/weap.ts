@@ -11,6 +11,7 @@ export interface WeapScenarioInput {
   biobardaEfficiencyPct?: number // 0-90
   reforestacionPct?: number // 0-50: baja pico escorrentía
   lluviaFactor?: number // 0.5-1.5: multiplica arrastre
+  outfallCode?: string // limita el escenario a un punto o tramo observado
 }
 
 export interface WeapNodeResult {
@@ -54,7 +55,8 @@ export async function runScenario(scenarioId: string, overrides: Partial<WeapSce
   const base = SCENARIOS[scenarioId]
   if (!base) throw new Error(`Escenario desconocido: ${scenarioId}`)
   const s: WeapScenarioInput = { ...base, ...overrides }
-  const records = await listTrashRecords()
+  const allRecords = await listTrashRecords()
+  const records = s.outfallCode ? allRecords.filter((r) => r.outfallCode === s.outfallCode) : allRecords
 
   const ptar = (s.ptarRemovalPct ?? 0) / 100
   const bio = s.biobardas ? (s.biobardaEfficiencyPct ?? 55) / 100 : 0

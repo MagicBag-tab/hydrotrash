@@ -60,6 +60,7 @@ router.get("/weap/results", async (req, res) => {
       ptarRemovalPct: req.query.ptar !== undefined ? Number(req.query.ptar) : undefined,
       reforestacionPct: req.query.refo !== undefined ? Number(req.query.refo) : undefined,
       lluviaFactor: req.query.lluvia !== undefined ? Number(req.query.lluvia) : undefined,
+      outfallCode: req.query.outfallCode ? String(req.query.outfallCode) : undefined,
     }
     const clean = Object.fromEntries(Object.entries(overrides).filter(([, v]) => v !== undefined && Number.isFinite(v)))
     const result = await runScenario(scenarioId, clean)

@@ -12,18 +12,21 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [runs, setRuns] = useState<WeapRun[]>([]);
+  const [reports, setReports] = useState<Array<{ outfallCode?: string | null; siteType?: string | null }>>([]);
+  const [point, setPoint] = useState('');
 
   useEffect(() => {
     api.weapScenarios().then(setScenarios).catch((e) => setErr(String(e)));
     api.weapRuns().then(setRuns).catch(() => setRuns([]));
+    api.listTrash().then(setReports).catch(() => setReports([]));
   }, []);
 
   async function run() {
     setLoading(true); setErr('');
     try {
       const [r, b] = await Promise.all([
-        api.weapResults(sel, { ptar, refo, lluvia }),
-        api.weapResults('base_2026'),
+        api.weapResults(sel, { ptar, refo, lluvia, ...(point ? { outfallCode: point } : {}) }),
+        api.weapResults('base_2026', point ? { outfallCode: point } : {}),
       ]);
       setRes(r); setBase(b);
     } catch (e) {
@@ -35,6 +38,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
 
   const maxP = Math.max(1, base?.totales.plastico ?? 1, res?.totales.plastico ?? 1);
   const latestRun = runs[0];
+  const points = [...new Set(reports.map((r) => r.outfallCode).filter((x): x is string => Boolean(x)))];
   const series = latestRun?.results.filter((row) => row.variable.toLowerCase() === 'streamflow') ?? [];
   const maxFlow = Math.max(0.000001, ...series.map((row) => Math.abs(row.value)));
 
@@ -53,6 +57,12 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
             {scenarios.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </label>
+        <label>Punto o tramo
+          <select value={point} onChange={(e) => setPoint(e.target.value)}>
+            <option value="">Todos los puntos</option>
+            {points.map((code) => <option key={code} value={code}>{code}</option>)}
+          </select>
+        </label>
         <label>PTAR % <input type="number" min={0} max={90} value={ptar} onChange={(e) => setPtar(Number(e.target.value))} /></label>
         <label>Reforestación % <input type="number" min={0} max={50} value={refo} onChange={(e) => setRefo(Number(e.target.value))} /></label>
         <label>Lluvia × <input type="number" step={0.1} min={0.5} max={1.5} value={lluvia} onChange={(e) => setLluvia(Number(e.target.value))} /></label>
@@ -62,6 +72,7 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
       {res && base && (
         <>
           <div className="row">
+            <div><strong>Alcance:</strong> {point || 'Todos los puntos'}</div>
             <div><strong>Base plástico:</strong> {base.totales.plastico}</div>
             <div><strong>{res.scenario}:</strong> {res.totales.plastico}</div>
             {res.reduccionVsBase && (
