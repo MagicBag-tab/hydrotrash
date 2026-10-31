@@ -14,6 +14,8 @@ frontend/package-lock.json
 data/
 # WEAP local configuration and generated exports
 weap-bridge/config.json
+weap-bridge/__pycache__/
 resultados.csv
+resultados-*.csv
 AGENTS.md
 

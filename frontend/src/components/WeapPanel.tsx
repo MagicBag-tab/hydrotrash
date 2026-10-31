@@ -35,6 +35,8 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
 
   const maxP = Math.max(1, base?.totales.plastico ?? 1, res?.totales.plastico ?? 1);
   const latestRun = runs[0];
+  const series = latestRun?.results.filter((row) => row.variable.toLowerCase() === 'streamflow') ?? [];
+  const maxFlow = Math.max(0.000001, ...series.map((row) => Math.abs(row.value)));
 
   async function exportPoints() {
     const blob = await api.observationPointsExport();
@@ -97,6 +99,21 @@ export default function WeapPanel({ refreshKey }: { refreshKey: number }) {
                 ))}</tbody>
               </table>
             </div>
+            {series.length > 1 && (
+              <div style={{ marginTop: 16 }}>
+                <strong>Caudal por periodo</strong>
+                <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+                  {series.map((row) => (
+                    <div key={row.id} title={`${row.periodStart.slice(0, 10)}: ${row.value} ${row.unit}`}>
+                      <small>{row.periodStart.slice(0, 7)} · {row.value}</small>
+                      <div style={{ background: '#e8eee9', borderRadius: 6, height: 12 }}>
+                        <div style={{ width: `${Math.max(2, Math.abs(row.value) / maxFlow * 100)}%`, background: '#147d73', height: 12, borderRadius: 6 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {latestRun.results.length > 20 && <small>Mostrando los primeros 20 registros.</small>}
           </>
         ) : <p><small>Aún no hay resultados importados desde WEAP.</small></p>}

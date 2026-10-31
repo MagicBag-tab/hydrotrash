@@ -69,7 +69,7 @@ describe("HydroTrash Contreras: trace + WEAP + demo", () => {
   it("GET /api/weap/scenarios lista 6 escenarios", async () => {
     const res = await request(app).get("/api/weap/scenarios")
     expect(res.status).toBe(200)
-    expect(res.body.length).toBe(6)
+    expect(res.body.length).toBe(8)
   })
 
   it("GET /api/weap/results integral reduce vs base", async () => {

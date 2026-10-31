@@ -31,6 +31,8 @@ export interface WeapResult {
 
 const SCENARIOS: Record<string, WeapScenarioInput> = {
   base_2026: { name: "Base 2026 (sin cambios)" },
+  monitoreo_actual: { name: "Monitoreo real (datos observados)" },
+  control_desfogues: { name: "Control de desfogues (prioridad alta)", biobardas: true, biobardaEfficiencyPct: 35 },
   ptar_60: { name: "PTAR 60% (tratamiento)", ptarRemovalPct: 60 },
   biobardas: { name: "Biobardas inteligentes", biobardas: true, biobardaEfficiencyPct: 55 },
   reforestacion_20: { name: "Reforestación 20%", reforestacionPct: 20 },

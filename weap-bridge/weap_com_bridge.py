@@ -111,6 +111,38 @@ def write_csv(row, output):
     with open(output, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CONTRACT); writer.writeheader(); writer.writerow({k: "" if row[k] is None else row[k] for k in CONTRACT})
 
+def extract_series(config, timeout):
+    mappings = config.get("mappings", [])
+    if not mappings: fail("Debe configurar al menos un mapping")
+    count = int(config.get("periodCount", 12))
+    if count < 1 or count > 12: fail("periodCount debe estar entre 1 y 12")
+    app = connect(timeout); select_area(app, config.get("area"))
+    scenario = str(config.get("scenario", ""))
+    if not any(name_of(s).lower() == scenario.lower() for s in items(app.Scenarios)):
+        fail("Escenario no encontrado: %s" % scenario)
+    rows = []
+    for mapping in mappings:
+        branch_path, variable, unit = mapping["branchPath"], mapping["variable"], mapping["unit"]
+        try: branch = app.Branch(branch_path)
+        except Exception as exc: fail("Rama no encontrada: %s (%s)" % (branch_path, exc))
+        try:
+            if not bool(branch.VariableExists(variable)): fail("Variable no encontrada en la rama: %s" % variable)
+        except Exception: pass
+        year = int(mapping["periodStartYear"])
+        for timestep in range(1, count + 1):
+            expression = "%s:%s[%s]" % (branch_path, variable, unit)
+            try: value = app.ResultValue(expression, year, timestep, scenario)
+            except Exception as exc: fail("WEAP no pudo leer ResultValue para %s, %s, timestep %s: %s" % (expression, scenario, timestep, exc))
+            month = timestep
+            start = date(year, month, 1)
+            end = date(year + (1 if month == 12 else 0), 1 if month == 12 else month + 1, 1)
+            rows.append({"elementCode": mapping["hydrotrashCode"], "periodStart": start.isoformat(), "periodEnd": end.isoformat(), "variable": variable, "value": None if value is None else float(value), "unit": unit})
+    return rows
+
+def write_rows(rows, output):
+    with open(output, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CONTRACT); writer.writeheader(); writer.writerows(rows)
+
 def import_csv(config, csv_path):
     url = config.get("backendUrl", "http://localhost:3000").rstrip("/") + "/api/weap/import"
     data = Path(csv_path).read_bytes()
@@ -126,6 +158,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("diagnose")
     extract = sub.add_parser("extract-one"); extract.add_argument("--output", required=True)
+    series = sub.add_parser("extract-series"); series.add_argument("--output", required=True)
     imp = sub.add_parser("import"); imp.add_argument("csv")
     args = parser.parse_args()
     try:
@@ -133,6 +166,8 @@ def main():
         if args.command == "diagnose": diagnostic(config, args.timeout)
         elif args.command == "extract-one":
             row = extract_one(config, args.timeout); write_csv(row, args.output); print(json.dumps(row, ensure_ascii=False))
+        elif args.command == "extract-series":
+            rows = extract_series(config, args.timeout); write_rows(rows, args.output); print(json.dumps({"count": len(rows), "output": args.output}, ensure_ascii=False))
         else: import_csv(config, args.csv)
     except Exception as exc:
         print("ERROR: %s" % exc, file=sys.stderr); return 2
