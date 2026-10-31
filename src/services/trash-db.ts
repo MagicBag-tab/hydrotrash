@@ -16,7 +16,12 @@ export async function createTrashRecord(
   imageUrl?: string | null,
   meta?: TrashSiteMeta
 ) {
-  const code = meta?.outfallCode?.trim() || null
+  let code = meta?.outfallCode?.trim() || null
+  if (!code) {
+    const year = String(new Date().getFullYear()).slice(-2)
+    const count = await prisma.trashRecord.count()
+    code = `UVG${year}stb-${String(count + 1).padStart(3, "0")}`
+  }
   const record = await prisma.trashRecord.create({
     data: {
       latitude,

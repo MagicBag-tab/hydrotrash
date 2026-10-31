@@ -16,8 +16,8 @@ router.get("/weap/field-export", async (_req, res) => {
       "plasticPercentage", "organicPercentage", "paperPercentage", "glassPercentage",
       "metalPercentage", "eWastePercentage", "chemicalHazardousPercentage", "otherPercentage",
     ]
-    const rows = records.map((record) => [
-      record.outfallCode || record.id,
+    const rows = records.map((record, index) => [
+      record.outfallCode || `UVG${String(record.createdAt.getFullYear()).slice(-2)}stb-${String(index + 1).padStart(3, "0")}`,
       record.createdAt.toISOString(),
       record.latitude,
       record.longitude,
