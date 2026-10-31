@@ -7,6 +7,8 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   AI_PROVIDER: z.enum(["anthropic", "gemini", "demo"]).default("anthropic"),
+  OBSERVATION_AREA_CODE: z.string().trim().min(1).max(12).default("UVG"),
+  OBSERVATION_CODE_KIND: z.string().trim().min(1).max(12).default("stb"),
   // Prisma CLI (generate, migrate) requires this and only accepts file: for SQLite. At runtime, if TURSO_* are set, the app uses Turso and ignores this.
   DATABASE_URL: z.string().refine((url) => url.startsWith("file:"), {
     message: "DATABASE_URL must start with file: (required by Prisma). When using Turso, set this to file:./dev.db and set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN for the app.",

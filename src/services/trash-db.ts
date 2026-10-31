@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js"
+import { env } from "../lib/env.js"
 import type { TrashAnalysis } from "../types/trash.js"
 
 export interface TrashSiteMeta {
@@ -20,7 +21,7 @@ export async function createTrashRecord(
   if (!code) {
     const year = String(new Date().getFullYear()).slice(-2)
     const count = await prisma.trashRecord.count()
-    code = `UVG${year}stb-${String(count + 1).padStart(3, "0")}`
+    code = `${env.OBSERVATION_AREA_CODE}${year}${env.OBSERVATION_CODE_KIND}-${String(count + 1).padStart(3, "0")}`
   }
   const record = await prisma.trashRecord.create({
     data: {
